@@ -11,6 +11,10 @@
 		Empty uri will load default controller
 		specified in settings
 
+		Non-empty uri not found in
+		routes will load 404 controller
+		specified in settings
+
 		You can also specify an empty route in the
 		routes to overwrite the default controller
 
