@@ -8,15 +8,13 @@
 	from the uri inputted
 
 	@Note
-		Empty uri will load default controller
-		specified in settings
+		URI that are empty will load the default
+		controller specified in settings
 
-		Non-empty uri not found in
-		routes will load 404 controller
-		specified in settings
-
-		You can also specify an empty route in the
-		routes to overwrite the default controller
+		URI that are not empty and not in routes
+		will load 404 controller specified in settings
+		You can specify an empty route in the routes
+		to overwrite this behaviour
 
 @Format
 	'{route}' => '{controller name}',
@@ -34,7 +32,9 @@
 */
 
 $routes = array(
+	'erreur' => 'erreur',
 	'salut/tout' => 'yo',
+	'page/with/[0-9]*' => "page_with_id",
 );
 
 
@@ -46,20 +46,38 @@ $routes = array(
 	truly exists
 */
 
-if (array_key_exists($_URIPARSER['path'], $routes)) {
-	$tempController = $routes[$_URIPARSER['path']];
 
-	if (file_exists("$__CONTROLLERS_DIR__/$tempController.php")) {
-		$controllerName = $tempController;
-	} else {
-		$controllerName = $_SETTINGS['404Controller'];
+
+function route_exists($path, $routes) {
+	foreach ($routes as $route => $controller) {
+	    if (preg_match("/^" . str_replace("/", "\\/", $route) . "$/", $path)) {
+	    	return $controller;
+	    }
 	}
-} else {
-	$controllerName = $_SETTINGS['defaultController'];
+
+	return null;
+}
+
+switch ($_URIPARSER['path']) {
+	case '':
+		$controllerName = $_SETTINGS['defaultController'];
+		break;
+	default:
+		if (!is_null(route_exists($_URIPARSER['path'], $routes))) {
+			$tempController = route_exists($_URIPARSER['path'], $routes);
+
+			if (file_exists("$__CONTROLLERS_DIR__/$tempController.php")) {
+				$controllerName = $tempController;
+			} else {
+				$controllerName = $_SETTINGS['404Controller'];
+			}
+		} else {
+			$controllerName = $_SETTINGS['404Controller'];
+		}
+		break;
 }
 
 $controllerFile = "$__CONTROLLERS_DIR__/$controllerName.php";
-print($controllerName);
-print($controllerFile);
+include($controllerFile);
 
 ?>

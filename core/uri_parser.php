@@ -7,5 +7,4 @@ $_URIPARSER = array(
 	'pathArray' => $pathArray,
 );
 
-
 ?>
