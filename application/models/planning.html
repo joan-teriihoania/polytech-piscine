@@ -1,0 +1,36 @@
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <!-- <h4 class="box-title">Chandler</h4> -->
+                <div class="calendrier">
+                    <div id="calendar" style="text-transform: capitalize;"></div>
+                </div>
+            </div>
+        </div><!-- /.card -->
+    </div>
+</div>
+
+
+<!-- Modal - Calendar - Add New Event -->
+<div class="modal fade none-border" id="event-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title"><strong>Evénement</strong></h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default waves-effect" data-dismiss="modal">Fermer</button>
+                <button type="button" class="btn btn-success save-event waves-effect waves-light">Créer</button>
+                <button type="button" class="btn btn-danger delete-event waves-effect waves-light" data-dismiss="modal">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /#event-modal -->
+
+<script type="text/javascript">
+    {{ CUSTOM_JS }}
+</script>
