@@ -1,1 +1,6 @@
-Page par défaut
+<?php
+
+$view = $model;
+$view_title = "Accueil";
+
+?>

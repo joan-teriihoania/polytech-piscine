@@ -1,1 +1,5 @@
-Yo
+<?php
+
+$view = $model;
+
+?>
