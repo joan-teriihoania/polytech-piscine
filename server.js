@@ -7,7 +7,6 @@ const { nextTick } = require('process');
 const { encrypt, decrypt } = require('./crypto');
 const sqlite = require('sqlite3')
 const db = require('./db')
-const googleutils = require('./googleutils')
 const auth = require('./auth')
 const dotenv = require('dotenv');
 dotenv.config();
@@ -226,7 +225,7 @@ function update_auth(req, res){
                 }
                 
                 if(res.user.img_profile == ""){
-                    res.user.img_profile = "/assets/img/avatars/none.png"
+                    res.user.img_profile = "/img/avatars/none.png"
                 }
 
                 db.select(database, "SELECT * FROM devices WHERE user_id = " + res.user.user_id, function(rows){
@@ -266,6 +265,7 @@ function update_auth(req, res){
 
 function render_page(view, req, res, use_framework=true, replaceValues = {}){
     fs.readFile("./views/framework.html", function(err, framework){
+        if(err){console.log(err)}
         if(use_framework){
             framework = framework.toString()
         } else {
@@ -344,11 +344,13 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
                                     framework = replaceAll(framework, '{{ '+key+' }}', replaceValues[key])
                                 }
     
-                                fs.readdir("./public/assets/js", (err, js_scripts) => {
+                                fs.readdir("./public/js", (err, js_scripts) => {
                                     js_scripts_embed = ""
-                                    for(js_script of js_scripts){
-                                        if(js_script == "autorefresh.js" && !view.autorefresh){continue}
-                                        js_scripts_embed += '<script src="/assets/js/'+js_script+'"></script>\n'
+                                    if(js_scripts && js_scripts.length > 0){
+                                      for(js_script of js_scripts){
+                                          if(js_script == "autorefresh.js" && !view.autorefresh){continue}
+                                          js_scripts_embed += '<script src="/js/'+js_script+'"></script>\n'
+                                      }
                                     }
     
                                     framework = replaceAll(framework, '{{ js_script }}', js_scripts_embed)

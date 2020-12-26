@@ -1,0 +1,61 @@
+<div>
+  <br>
+  <h1 class="text-login-color">Gestion des évènements<h1/>
+</div>
+<hr><br>
+<div>
+    <div>
+        <div class="m-auto w-lg-75 w-xl-50">
+          
+            <h2 class="text text-login-color">Ajouter un évènement</h2>
+            <br>
+            <form id="login-form">
+                <div class="form-group">
+                  <label>Titre de l'évènement</label>
+                  <input type="text" id="event-name" class="form-control" required/>
+                </div>
+                <div class="form-group">
+                  <label>Description de l'évènement</label>
+                  <input id="event-description" type="text"   class="form-control"required/>
+                </div>
+                <div class="form-group">
+                  <label for="promoList" class="form-label">Promotion concernée</label>
+                  <input class="form-control" list="promoListOptions" id="promoList" placeholder="Tapez pour trouver...">
+                  <datalist id="promoListOptions">
+                  <option value="IG4">
+                  <option value="IG5">
+                  <option value="GBA4">
+                  <option value="GBA5">
+                  <option value="STE4">
+                  <option value="STE5">
+                  </datalist>                
+                </div>
+                <form>
+                  <div class="form-group" class="nativeDatePicker">
+                    <label for="start">Date de début</label>
+                    <input type="date" id="start"     name="event-start">
+                    <span class="validity"></span>
+                  </div>
+                </form>
+                <form>
+                  <div class="nativeDatePicker">
+                    <label for="end">Date de fin</label>
+                    <input type="date" id="end" name="event-start">
+                    <span class="validity"></span>
+                  </div>
+                </form>
+                <button class="btn btn-primary text-white" id="login-submit" type="submit">Ajouter</button>
+            </form>
+            <br>
+        </div>
+    </div>
+</div>
+<br><br><br>
+<div>
+        <div class="m-auto w-lg-75 w-xl-50">
+            <h2 class="text text-login-color">Modifier un évènement</h2>
+            <br>
+            <hr>
+        </div>
+    </div>
+</div>
