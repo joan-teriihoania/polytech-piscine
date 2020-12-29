@@ -22,15 +22,15 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
 		},
     "/event": {
-			"filename": "manage",
+			"filename": "events",
 			"title": "Gestion des évènements",
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
 		},
     "/event/:event_id/edit": {
 			"filename": "edit",
@@ -38,7 +38,7 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
 		},
     "/event/:event_id/view": {
 			"filename": "view",
@@ -46,7 +46,7 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
 		},
     "/event/:event_id/register": {
 			"filename": "reserve",
@@ -54,15 +54,23 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
 		},
-    "/user": {
+    "/profile": {
 			"filename": "account",
 			"title": "Mon compte",
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": false
+			"autorefresh": true
+    },
+    "/users": {
+			"filename": "users",
+			"title": "Gestion des utilisateurs",
+			"css": [],
+			"js": [],
+			"login": false,
+			"autorefresh": true
     }
 	},
 	"api":{

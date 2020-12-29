@@ -4,14 +4,27 @@ document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
 
   var calendar = new FullCalendar.Calendar(calendarEl, {           
-    initialView: 'timeGridWeek',
-    initialDate: '2021-01-01',
+    initialView: 'timeGridWeek', /*affichage par défaut*/
+    initialDate: '2021-01-01', 
+    locale: 'fr',/* choix langue */
+
     headerToolbar: {
       left: 'prev,next today',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
-      },
-    aspectRatio: 1.78,
+    },/*affichage de l'en-tête du calendrier */
+
+    aspectRatio: 1.78,/* format calendrier */
+    hiddenDays: [0], /* permet de cacher le dimanche */
+
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
+    /* heures de début et de fin de la journée */
+
+    allDaySlot: false,/* enlève l'affichage des évènements journaliers */
+    slotEventOverlap: false, /* pas forcément indispensable, évite que des créneaux puissent se chevaucher */
+    expandRows: true,/* ajuste la taille des lignes */
+
     events: [
       {
         title: 'créneau',
@@ -27,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
    });
 
   calendar.render();
-  calendar.setOption('locale', 'fr');
 });
+
 
 /*A PARTIR D'ICI: 
 C'est le fichier main.js de fullcalendar (pas fait par moi donc), ne pas modifier à moins de savoir ce qu'on fait lol (à remplacer par le fichier main.min.js éventuellement) */
