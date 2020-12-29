@@ -9,6 +9,9 @@
   z-index: 2;
 }
 
+@media (prefers-reduced-motion: reduce){}
+
+
 @media (max-width: 991.98px) {
   #login-block {
     opacity: .95;
@@ -44,5 +47,7 @@
 }
 .text-login-color {
   color: #0fa0d4ee;
+  font-family: "Roboto","Ubuntu","Helvetica Neue",sans-serif;
   text-align: center;
 }
+
