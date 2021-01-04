@@ -1,14 +1,53 @@
-.mh-100vh {
-  min-height: 100vh;
+.mh-50vh {
+  min-height: 50vh;
 }
 
 #login-block {
+  max-block-size: 60pc;
+  block-size: 60pc;
   -webkit-box-shadow: 0px 0px 45px 0px rgba(0,0,0,0.4);
   -moz-box-shadow: 0px 0px 45px 0px rgba(0,0,0,0.4);
-  box-shadow: 0px 0px 45px 0px rgba(0,0,0,0.4);
+  box-shadow: 0px 0px 45px 0px rgba(0,0,0,0.9);
   z-index: 2;
 }
-
+#event1-block {
+  max-width: 1150px;
+  width: auto;
+  margin-block-start: 50px;
+  margin-block-end: auto;
+  margin-inline-start: auto;
+  margin-inline-end: auto;
+  block-size: auto;
+  -webkit-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+#event2-block {
+  max-width: 70pc;
+  width: auto;
+  margin-block-start: 0px;
+  margin-block-end: 50px;
+  margin-inline-start: 50px;
+  margin-inline-end: 50px;
+  block-size: auto;
+  -webkit-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  z-index: 2;
+}
+#event3-block {
+  width: auto;
+  margin-block-start: 50px;
+  margin-block-end: 50px;
+  margin-inline-start: 50px;
+  margin-inline-end: 50px;
+  block-size: auto;
+  -webkit-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  box-shadow: 0px 0px 50px 0px rgba(0,0,0,0.4);
+  z-index: 2;
+}
 @media (prefers-reduced-motion: reduce){}
 
 
@@ -40,7 +79,7 @@
   }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 150px) {
   .w-xl-50 {
     width: 50%;
   }
@@ -50,4 +89,7 @@
   font-family: "Roboto","Ubuntu","Helvetica Neue",sans-serif;
   text-align: center;
 }
-
+.bg-main {
+  background-color: rgb(241, 249, 255);
+  opacity: .95;
+}

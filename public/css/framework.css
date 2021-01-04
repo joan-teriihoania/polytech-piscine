@@ -51,6 +51,7 @@
 /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
 #main {
   transition: margin-left .5s;
+
 }
 
 /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
@@ -64,4 +65,7 @@
 
 .span {
   color:white;
+}
+body{
+  background-image: url(/img/polytech-montpellier-presentation.jpg);
 }
