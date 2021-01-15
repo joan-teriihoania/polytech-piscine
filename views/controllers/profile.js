@@ -15,12 +15,12 @@ module.exports = {
 
             toreturn = []
             promise = []
+            params["groups"] = []
             
             for(const [key, group] of Object.entries(groups)){
               promise.push(new Promise(function(resolve, reject){
-                db.selectAll("users", {group_id: group._id}, {}, function(users){
+                db.selectAll("users", {group_id: group._id.toString()}, {}, function(users){
                   group['members'] = users
-                  params["groups"] = []
                   params["groups"].push(group)
                   resolve()
                 })
@@ -28,7 +28,6 @@ module.exports = {
             }
 
             Promise.all(promise).then(() => {
-              console.log(params["groups"])
               callback(content, params)
             })
           })

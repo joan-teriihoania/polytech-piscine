@@ -53,24 +53,20 @@
         } else {
           group_name = ""
           for(const [key, group] of Object.entries(groups)){
-            if(group._id == req.user.group_id){
-              group_name = group.groupname
+            if(group._id == req.user.group_id){ %>
+              <h2><b>Votre groupe:</b> <%= group.groupname %></h2>
+              <%
+              for(const [key, member] of Object.entries(group['members'])){
+                %>
+                  <%= member.firstName + " " + member.lastName %><br>
+                <%
+              }
               break
             }
           }
-          %><%= group_name %><%
         }
       %>
 		  <br><br>
-	    Membres de votre groupe
-      <%
-        for(const [key, member] of Object.entries(groups)){
-          if(group._id == req.user.group_id){
-            group_name = group.groupname
-            break
-          }
-        }
-      %>
 	    <br><br>
 	    <div class="row align-items-center">
 	    
