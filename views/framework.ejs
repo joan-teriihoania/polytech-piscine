@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no, maximum-scale=5.0, minimum-scale=1,  target-densitydpi=device-dpi">
+      <title><%= page_title %></title>
+      <link rel="icon" href ="/icon/logoPolytech.png">
+      <meta name="description" content="Projet piscine">
+      <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css?h=b3894f6dfe78409af1ad810620470b56">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i">
+      <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.12.0/css/all.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <link rel="stylesheet" href="/fonts/fontawesome5-overrides.min.css?h=b077f3d66f4dd45a76529f02462151f3">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10.3.5/dist/sweetalert2.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.5.0/main.min.css">
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.23/af-2.3.5/b-1.6.5/b-html5-1.6.5/sc-2.0.3/datatables.min.css"/>
+      <link rel="stylesheet" href="/css/toastr_custom.css">
+      <link rel="stylesheet" href="/css/framework.css">
+      <link rel="stylesheet" href="/css/main.css">
+      <link rel="stylesheet" href="/css/Register-form.css">
+      <link rel="stylesheet" href="/css/reserve.css">
+      <link rel="stylesheet" href="/css/404.css">
+    </head>
+<body>
+  <div class="bg"></div>
+  <div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn btn btn-sm" onclick="closeNav()"><i class="fas fa-chevron-left"></i></a>
+    <br><br>
+    <img src="/icon/logoig.png" onclick="window.location.href='/'" class="hide img-fluid rounded mx-auto d-block" style="max-width:35%;height:auto" alt="Accueil">
+    
+    <br>
+    <% if(req.user){ %>
+        <a href="/profile">Mon compte</a>
+        <a href="/help">Besoin d'aide ?</a>
+        <% if(req.user.isAdmin){ %>
+            <a href="/admin/users">Gérer les utilisateurs</a>
+            <a href="/admin/events">Gérer les évènements</a>
+        <% } else if(user_event_id != "Aucune"){ %>
+            <a href="/event/<%= user_event_id %>/reserve">Réserver un créneau</a>
+        <% } %>
+        <a href="/logout">Se déconnecter </a>
+    <% } else { %>
+        <a href="/login">Se connecter </a>
+    <% } %>
+  </div>
+  
+  <div class="wrapper" id="main">
+    <!-- Use any element to open the sidenav -->
+    <span class="openNavButton btn btn-light text-primary border border-primary" onclick="openNav()"><i class="fas fa-bars"></i> MENU</span>
+
+    <button class="homeButton btn btn-light text-primary border border-primary" onclick="window.location.href='/'"><i class="fas fa-home"></i> Accueil </button>
+
+    <div class="container-fluid" id="page_container">
+      <br>
+      {{ page }}
+    </div>
+  </div>
+</body>
+
+<div class="ml-3 mr-3" style="right:0px;bottom:0px;position:fixed">
+    <p class="small text-dark"><a class="text-light" target="_blank" href="https://www.polytech.umontpellier.fr/"><em>© 2020 Polytech Montpellier</em></a>
+    </p>
+</div>
+
+
+<script>
+  var user = <%- req.user ? JSON.stringify(req.user) : JSON.stringify({}) %>
+  var req_csrfToken = "<%- req.csrfToken() %>"
+  var user_event_id = "<%= user_event_id %>"
+</script>
+
+<script>
+    function print() {
+        var frame = document.getElementById('frame');
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+    }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.3.5/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.5.0/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.5.0/locales-all.min.js"></script>
+<script defer type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.23/af-2.3.5/b-1.6.5/b-html5-1.6.5/sc-2.0.3/datatables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.2.0/jspdf.umd.min.js"></script>
+{{ js_scripts }}
+</html>

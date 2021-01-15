@@ -1,0 +1,146 @@
+<div class="bg-main " id="account1-block">
+  <br><br>
+  <h1 class="blue-polytech">Mon compte</h1>
+<br><hr>
+<div class="text-secondary text-center ">
+  <h2 class="text-secondary text-center"><%= req.user.email %></h2>
+  <br>
+  <b>
+   <%= req.user.firstName %> <%= req.user.lastName %> 
+  <br><br>
+	Statut: <% if (req.user){ %>
+          <%  if (req.user.isAdmin){ %>
+                <p>Administrateur</p>
+          <% } else { %>
+                <p>Etudiant<br><br>Promotion:<br><span id="account-user-promotion"></span><a class="btn btn-sm btn-link" onclick="change_user_promo()"><i class="fas fa-edit"></i></a></p>
+          <% } %>
+        <% } %>
+	<br><br>
+  	<a class="btn btn-primary  text-center " data-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Modifier le mot de passe</a>
+    <br><br>
+		<div class="collapse multi-collapse text-center" id="multiCollapseExample1" id="account2-block">
+			<div class="text-center col-md-4 ml-auto mr-auto" id="account2-block">
+				<form id=“change-password” class="account2-block">
+			    <br>
+		      <div class="ml-3 mr-3">
+		        <!-- enter old password -->
+					  <input id="oldpassword" type="password" class="form-control input-group" placeholder="Ancien mot de passe" required>
+					  <small><i>Veuillez saisir votre ancien mot de passe</i></small>
+					  <br>
+		        <!-- enter new password -->
+					  <input id="newpassword" type="password" class="form-control input-group" placeholder="Nouveau mot de passe" required>
+					  <small><i>Veuillez saisir votre nouveau mot de passe</i></small>
+		        <br>
+		        <!-- confirm new password -->
+					  <input type="password" class="form-control input-group" placeholder="Confirmation du nouveau mot de passe" required>
+					  <small><i>Veuillez confirmer votre nouveau mot de passe</i></small>
+					  <br><br>
+					  <button class="btn btn-primary" id="change-password-submit" type="submit">Modifier</button>
+					  <br><br>
+					</div>
+				</form>
+		  </div>
+		</div>
+  
+  <% if(!req.user.isAdmin){ %>
+		<!-- group block-->
+		<div class="text-center col-md-4 ml-auto mr-auto " id="account3-block">
+		  <br>
+		  <%
+        groups_id = groups.map((group) => {return group._id.toString()})
+        if(!groups_id.includes(req.user.group_id)){
+          %> Aucun groupe <%
+        } else {
+          group_name = ""
+          for(const [key, group] of Object.entries(groups)){
+            if(group._id == req.user.group_id){
+              group_name = group.groupname
+              break
+            }
+          }
+          %><%= group_name %><%
+        }
+      %>
+		  <br><br>
+	    Membres de votre groupe
+      <%
+        for(const [key, member] of Object.entries(groups)){
+          if(group._id == req.user.group_id){
+            group_name = group.groupname
+            break
+          }
+        }
+      %>
+	    <br><br>
+	    <div class="row align-items-center">
+	    
+	    <!--create a group-->
+	    
+  	    <div class="text-center ml-auto mr-auto">
+    	    <a class="btnaccount btn btn-primary text-center" data-toggle="collapse" href="#multiCollapseExample2" role="button" aria-expanded="false" aria-controls="multiCollapseExample2">Créer un groupe</a>
+          <br>
+          
+      		<div class="collapse multi-collapse text-center" id="multiCollapseExample2" id="account4-block">
+      			<div class="text-center ml-auto mr-auto" id="account4-block">
+              <br>
+              <div class="ml-3 mr-3">
+                <!-- name of the groupe -->
+                <form id="create-group-form">
+                  <input id="group-name" class="form-control input-group" name="grouname" placeholder="Nom de votre groupe" required>
+                  <small><i>Veuillez saisir votre nom de groupe</i></small>
+                  <br><br>
+                  <button class="btn btn-primary" id="create-group-submit" type="submit">Créer le groupe</button>
+                </form>
+                <br><br>
+              </div>
+      		  </div>
+      		</div>
+  		  </div>
+    		<br>
+
+    		<!--join a group-->
+          <div class="text-center ml-auto mr-auto">
+            <a class="btn account btn btn-primary text-center" data-toggle="collapse" href="#multiCollapseExample3" role="button" aria-expanded="false" aria-controls="multiCollapseExample3">Rejoindre un groupe</a>
+            <br>
+            
+            <div class="collapse multi-collapse" id="multiCollapseExample3" id="account4-block">
+            <form id="choose-group-form">
+                <div class="text-center ml-auto mr-auto" id="account4-block">
+                  <form id=“join-group” class="account4-block">
+                    <br>
+                    <div class="ml-3 mr-3">
+                          <select class="form-control" list="groupListOptions" id="group-name-chosen" required>
+                            <%
+                              groups.unshift({_id: "Aucun", groupname: "Aucun"})
+                                for(group of groups){
+                                  if(group._id == req.user.group_id){
+                                    %>
+                                      <option value="<%= group._id %>" selected><%= group.groupname %></option>
+                                    <%
+                                  } else {
+                                    %>
+                                      <option value="<%= group._id %>"><%= group.groupname %></option>
+                                    <%
+                                  }
+                                }
+                            %>
+                          </select>       
+                          <br>
+                      <button class="btn btn-primary" id="choose-group-submit" type="submit">Rejoindre</button>
+                      <br><br>
+                    </div>
+                  </form>
+                </div>
+              </form>
+            </div>
+          </div>
+        </form>
+		  <br>
+		  </div>
+		<br>
+	  </div>
+	<br>
+  </div>
+  <% } %>
+</div>
+<br><br>

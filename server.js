@@ -7,21 +7,60 @@ const { nextTick } = require('process');
 const { encrypt, decrypt } = require('./crypto');
 const sqlite = require('sqlite3')
 const db = require('./db')
-const auth = require('./auth')
+let ejs = require('ejs');
 const dotenv = require('dotenv');
 dotenv.config();
+const path = require("path");
+const bcrypt = require("bcryptjs");
+const bodyParser = require("body-parser");
+const csurf = require("csurf");
+const mongoose = require("mongoose");
+const sessions = require("client-sessions");
 
-var database = db.createDB()
+const auth = require("./auth");
+const models = require("./models");
+const settings = require("./settings");
+
+
+// init DB 
+mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+
 var routes = {}
 
 /*
   Read the router.json file to retrieve data about the routes
   and path for the website to load their views
 */
+server.set('view engine', 'ejs')
 server.use(cookieParser());
 server.use(express.static('public'));
 server.use(express.json());       // to support JSON-encoded bodies
-server.use(express.urlencoded()); // to support URL-encoded bodies
+server.use(bodyParser.urlencoded({ extended: true }));
+
+// login
+server.use(sessions({
+  cookieName: "session",
+  secret: settings.SESSION_SECRET_KEY,
+  duration: settings.SESSION_DURATION,
+  activeDuration: settings.SESSION_EXTENSION_DURATION,
+  cookie: {
+    httpOnly: true,
+    ephemeral: settings.SESSION_EPHEMERAL_COOKIES,
+    secure: settings.SESSION_SECURE_COOKIES
+  }
+}));
+
+server.use(csurf());
+server.use(auth.loadUserFromSession);
+
+// error handling
+server.use((err, req, res, next) => {
+  next()
+});
+
+// fin login
+
+
 
 loggerRequest = {}
 setInterval(function(){
@@ -29,7 +68,6 @@ setInterval(function(){
 }, 1000)
 
 
-/* ROUTES */
 server.all('*', function(req, res, next){
     res.ip = (req.headers['x-forwarded-for'] || '').split(',')[0] || req.connection.remoteAddress
 
@@ -46,225 +84,127 @@ server.all('*', function(req, res, next){
         res.redirect(req.url.substr(0, req.url.length - 1))
         return
     }
-    
-    update_auth(req, res).then(() => {
-        if(req.path.substr(0, process.env.API_PATH_PREF.length) == process.env.API_PATH_PREF){
-            api_info = routes['api'][req.method][req.path.replace(process.env.API_PATH_PREF, '')]
-            if(api_info == undefined){
-                var req_path = req.path.split('/')
 
-                for(const [path, content] of Object.entries(routes['api'][req.method])){
-                    var api_path = (process.env.API_PATH_PREF + path).split('/')
-                    var loaded_api_path = []
-                    var loaded_req_path = []
-                    for(var i = 0; i < api_path.length; i++){
-                        if(api_path[i] == "*"){
-                            break
-                        }
-
-                        if(!api_path[i].startsWith(':')){
-                            loaded_api_path.push(api_path[i])
-                            loaded_req_path.push(req_path[i])
-                        } else {
-                            loaded_api_path.push(req_path[i])
-                            loaded_req_path.push(req_path[i])
-                        }
-                    }
-
-                    if(loaded_api_path.join('/') == loaded_req_path.join('/')){
-                        api_info = routes['api'][req.method][path]
-                    }
-                }
-
-                if(api_info == undefined){
-                    res.status(404)
-                    res.end("Cannot link " + req.method + " "+req.url+" to any API script")
-                    return
-                }
-            }
-
-            if(!res.user.is_auth && api_info.login){
-                res.status(401)
-                res.end("Echec d'authentification : Vous devez être connecté pour accéder à cette page ou faire cette action.")
-                return
-            }
-
-            if(api_info.admin && req.body.auth_key != process.env.SECRET_KEY && req.query.auth_key != process.env.SECRET_KEY){
-                res.status(401)
-                res.end("L'accès à cet API est réservé aux administrateurs")
-                return
-            }
-        }
-
-        next()
-    })
+    next()
 })
 
 server.get('*', function(req, res, next){
-    if(req.path.substr(0, process.env.API_PATH_PREF.length) == process.env.API_PATH_PREF){
-        next()
-        return
-    }
-
-    var view_info = undefined
-    var req_path = req.path.split('/')
-    for (const [path, content] of Object.entries(routes['views'])) {
-        if(path == req.path || "/ajax" + path == req.path){
-            view_info = routes['views'][path]
-        }
-        
-        var view_path = (path).split('/')
-        if(req_path.length == view_path.length){
-            var loaded_view_path = []
-            var loaded_req_path = []
-
-            for(var i = 0; i < view_path.length; i++){
-                if(!view_path[i].startsWith(':') || !view_path[i] == "ajax"){
-                    loaded_view_path.push(view_path[i])
-                    loaded_req_path.push(req_path[i])
-                } else {
-                    loaded_view_path.push(req_path[i])
-                    loaded_req_path.push(req_path[i])
-                }
-            }
-
-            if(loaded_view_path.join('/') == loaded_req_path.join('/')){
-                view_info = routes['views'][path]
-            }
-        }
-    }
-    
-    if(!view_info){
-        res.status(404)
-        render_page({"filename": "404", "title": "Page introuvable"}, req, res)
-        return
-    }
-
-    if(!res.user.is_auth && view_info['login']){
-        res.status(401)
-        render_page({"filename": "login", "title": "Connexion"}, req, res)
-        return
-    }
-    
-    if(res.user.is_auth && req.path.split('/')[1] != "ajax"){ console.log("[MONITOR] ("+res.user.username+"@"+res.user.user_id+"-"+res.ip+") >> " + req.path) }
     next()
 })
 
 server.listen(process.env.PORT, function(){
     console.log("[EXPRESS] Server listening on port " + process.env.PORT)
-    fs.readFile("./database_template.json", function(err, database_template){
-        database_template = JSON.parse(database_template.toString())
-        for (const [tablename, rows] of Object.entries(database_template)) {
-            console.log("[DB-CONFIG] Table " + tablename + " configured")
-            db.createTable(database, tablename, rows)
-        }
-    })
 })
 
 
 
 
 // LOADING ROUTING PATH
-
-
 fs.readFile("./router.json", function(err, routerContent){
     routes = JSON.parse(routerContent)
 
-    for (const [path, content] of Object.entries(routes['views'])) {
-        console.log("[ROUTER] View '" + content['filename'] + "' linked to '" + path + "' and '/ajax" + path + "'")
+    for (const [path, view_info] of Object.entries(routes['views'])) {
+        console.log("[ROUTER] View '" + view_info['filename'] + "' linked to '" + path + "' and '/ajax" + path + "'")
+
         server.get(path, function(req, res) {
-            render_page(content, req, res)
+            if(!req.user && view_info.login){
+                res.status(401)
+                render_page({"filename": "login", "title": "Connexion"}, req, res)
+                return
+            }
+
+            if(!req.user && view_info['admin']){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return
+            }
+
+            if(req.user && view_info['admin'] && !req.user.isAdmin){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return
+            }
+
+            render_page(view_info, req, res)
         });
         
         server.get("/ajax" + path, function(req, res) {
-            render_page(content, req, res, false)
+            render_page(view_info, req, res, false)
         });
     }
-    
-    for (const [path, content] of Object.entries(routes['api']['POST'])) {
-        console.log("[ROUTER] API '" + content['filename'] + "' linked to <POST> '" + process.env.API_PATH_PREF + path + "'")
-        server.post(process.env.API_PATH_PREF + path, function(req, res, next) {
-            var temp = require("./api/" + content['filename'])
+
+    for (const [path, api_info] of Object.entries(routes['api']['DELETE'])) {
+        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <DELETE> '" + process.env.API_PATH_PREF + path + "'")
+        server.delete(process.env.API_PATH_PREF + path, function(req, res, next) {
+            var temp = require("./api/" + api_info['filename'])
             temp.exec(req, res, next)
         });
     }
 
-    for (const [path, content] of Object.entries(routes['api']['GET'])) {
-        console.log("[ROUTER] API '" + content['filename'] + "' linked to <GET> '" + process.env.API_PATH_PREF + path + "'")
-        server.get(process.env.API_PATH_PREF + path, function(req, res, next) {
-            var temp = require("./api/" + content['filename'])
+    for (const [path, api_info] of Object.entries(routes['api']['PUT'])) {
+        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <PUT> '" + process.env.API_PATH_PREF + path + "'")
+        server.put(process.env.API_PATH_PREF + path, function(req, res, next) {
+            var temp = require("./api/" + api_info['filename'])
             temp.exec(req, res, next)
         });
     }
+
+    for (const [path, api_info] of Object.entries(routes['api']['POST'])) {
+        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <POST> '" + process.env.API_PATH_PREF + path + "'")
+        server.post(process.env.API_PATH_PREF + path, function(req, res, next) {
+            if(!req.user && api_info.login){
+                res.status(401)
+                res.end("Echec d'authentification : Vous devez être connecté pour accéder à cette page ou faire cette action.")
+                return
+            }
+
+            if(api_info.admin && (!req.user || !req.user.isAdmin)){
+                res.status(401)
+                res.end("L'accès à cet API est réservé aux administrateurs")
+                return
+            }
+
+            var temp = require("./api/" + api_info['filename'])
+            temp.exec(req, res, next)
+        });
+    }
+
+    for (const [path, api_info] of Object.entries(routes['api']['GET'])) {
+        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <GET> '" + process.env.API_PATH_PREF + path + "'")
+        server.get(process.env.API_PATH_PREF + path, function(req, res, next) {
+            if(!req.user && api_info.login){
+                res.status(401)
+                res.end("Echec d'authentification : Vous devez être connecté pour accéder à cette page ou faire cette action.")
+                return
+            }
+
+            if(api_info.admin && (!req.user || !req.user.isAdmin)){
+                res.status(401)
+                res.end("L'accès à cet API est réservé aux administrateurs")
+                return
+            }
+
+            var temp = require("./api/" + api_info['filename'])
+            temp.exec(req, res, next)
+        });
+    }
+    
+    server.get(process.env.API_PATH_PREF + "/*", function(req, res, next) {
+        res.status(404)
+        res.end("Cannot link " + req.method + " "+req.url+" to any API script")
+    })
+
+    server.get("*", function(req, res, next) {
+        res.status(404)
+        render_page({"filename": "404", "title": "Page introuvable"}, req, res)
+    })
 })
 
 
 // FUNCTIONS
 
-function update_auth(req, res){
-    return new Promise(function(resolve, reject){
-        var auth_ = req.cookies["JZ-Translation-auth"]
-        if (!auth_ || auth_ == "undefined"){
-            var auth_ = encrypt("{}")
-            res.cookie("JZ-Translation-auth", auth_)
-        }
-
-        var user = JSON.parse(decrypt(auth_))
-        res.user = {
-            is_auth: false
-        }
-        
-        auth.is_auth(database, user, req, function(auth_method, info){
-            res.user.is_auth = auth_method != false ? true : false
-            res.user.auth_method = auth_method
-            if(auth_method){
-                for (const [key, value] of Object.entries(info)) {
-                    if(key != "password"){
-                        res.user[key] = value
-                    }
-                }
-                
-                if(res.user.img_profile == ""){
-                    res.user.img_profile = "/img/avatars/none.png"
-                }
-
-                db.select(database, "SELECT * FROM devices WHERE user_id = " + res.user.user_id, function(rows){
-                    var promises = []
-                    if(rows && rows.length > 0){
-                        res.user.devices = rows
-                        for(row of rows){
-                            promises.push(new Promise(function(resolve, reject){
-                                db.select(database, "SELECT * FROM translations WHERE device_id = " + row.device_id + 
-                                " AND translated_at BETWEEN datetime('now', 'start of month') AND datetime('now', 'localtime');",
-                                function(rows){
-                                    if(rows && rows.length > 0){
-                                        res.user.translations = rows
-                                    } else {
-                                        res.user.translations = []
-                                    }
-                                    resolve()
-                                })
-                            }))
-                        }
-                    } else {
-                        res.user.devices = []
-                        res.user.translations = []
-                    }
-
-                    Promise.all(promises).then(() => {
-                        resolve()
-                    })
-                })
-            } else {
-                resolve()
-            }
-
-        })
-    })
-}
-
 function render_page(view, req, res, use_framework=true, replaceValues = {}){
-    fs.readFile("./views/framework.html", function(err, framework){
+    fs.readFile("./views/framework.ejs", function(err, framework){
         if(err){console.log(err)}
         if(use_framework){
             framework = framework.toString()
@@ -272,7 +212,7 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
             framework = "{{ page }}"
         }
 
-        fs.readFile("./views/pages/" + view['filename'] + ".html", function(err, page){
+        fs.readFile("./views/pages/" + view['filename'] + ".ejs", function(err, page){
             if(!err){
                 var promise
                 try {
@@ -293,22 +233,23 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
                         }
 
                         Promise.all(ressourceFilesPromise).then(() => {
-                            pageController.format(page.toString(), req, res, ressourceFiles, function(page){
-                                resolve(page)
+                            pageController.format(page.toString(), {}, req, res, ressourceFiles, function(page, params){
+                                resolve([page, params])
                             })
                         })
                     })
                 } catch(err) {
                     promise = new Promise(function(resolve, reject){
-                        resolve(page.toString())
+                        resolve([page.toString(), {}])
                     })
                 }
                 
-                promise.then(function(page){
+                promise.then(function(returned){
+                    page = returned[0]
+                    params = returned[1]
                     if(page == false){return}
                     var elementsFolder = "./views/elements/"
                     framework = replaceAll(framework, '{{ page }}', page)
-    
                     fs.readdir(elementsFolder, (err, elementsFiles) => {
                         fm.readFiles(elementsFolder, elementsFiles, function(dataElementFiles){
                             let loadElements = []
@@ -332,17 +273,6 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
                 
                             Promise.all(loadElements)
                                 .then(() => { // all done!
-                                for (const [key, value] of Object.entries(res.user)) {
-                                    framework = replaceAll(framework, '{{ data:user.'+key+' }}', res.user[key])
-                                    if(res.user[key] instanceof Array){framework = replaceAll(framework, '{{ data:user.'+key+'.length }}', res.user[key].length)}
-                                    if(res.user[key] instanceof Object){framework = replaceAll(framework, '{{ data:user.'+key+'.length }}', Object.keys(res.user[key]).length)}
-                                }
-
-                                replaceValues['page_title'] = view['title']
-    
-                                for (const [key, value] of Object.entries(replaceValues)) {
-                                    framework = replaceAll(framework, '{{ '+key+' }}', replaceValues[key])
-                                }
     
                                 fs.readdir("./public/js", (err, js_scripts) => {
                                     js_scripts_embed = ""
@@ -352,10 +282,40 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
                                           js_scripts_embed += '<script src="/js/'+js_script+'"></script>\n'
                                       }
                                     }
-    
-                                    framework = replaceAll(framework, '{{ js_script }}', js_scripts_embed)
+
+                                    framework = framework.replace(/{{ js_scripts }}/gi, js_scripts_embed)
                                     if(!res.headersSent){
-                                        res.send(framework)
+                                      if(framework && params){
+                                        params['page_title'] = view['title']
+                                        params['req'] = req
+                                        params['db'] = db
+                                        if(!db.isConnected()){
+                                          res.send("DB-ERROR: Please retry.")
+                                          return
+                                        }
+                                        
+                                        try {
+                                          
+                                          user_event_id = "Aucune"
+                                          if(req.user){
+                                            db.selectOne("promos", {_id: req.user.promo_id}, {}, function(promo){
+                                              if(promo){user_event_id = promo.event_id}
+                                              params["user_event_id"] = user_event_id
+                                              framework = ejs.render(framework, params)
+                                              res.send(framework)
+                                            })
+                                          } else {
+                                            params["user_event_id"] = user_event_id
+                                            framework = ejs.render(framework, params)
+                                            res.send(framework)
+                                          }
+                                        } catch(e) {
+                                          res.status(500)
+                                          res.send(e)
+                                        }
+                                      } else {
+                                        res.send("FATAL ERROR")
+                                      }
                                     }
                                 })
                             })
@@ -383,10 +343,6 @@ function generateAuthKey(length) {
  }
 
 module.exports = {
-    database,
-    update_database: function(newdatabase){
-        database = newdatabase
-    },
     replaceAll,
     generateAuthKey
 }

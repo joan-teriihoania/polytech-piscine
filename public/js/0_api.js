@@ -1,3 +1,22 @@
+dataTableLanguageOptions = {
+    "lengthMenu": "Afficher _MENU_ par page",
+    "zeroRecords": "Aucun résultat",
+    "info": "Page _PAGE_ sur _PAGES_",
+    "infoEmpty": "Aucun résultat",
+    "infoFiltered": "(Filtré sur _MAX_ au total)",
+    "loadingRecords": "Chargement...",
+    "processing":     "Chargement...",
+    "search":         "Recherche:",
+    "zeroRecords":    "Aucun résultat trouvé",
+    "paginate": {
+        "first":      "Premier",
+        "last":       "Dernier",
+        "next":       "Suivant",
+        "previous":   "Précédent"
+    },
+}
+
+
 function findGetParameter(parameterName) {
     var result = null,
         tmp = [];
@@ -11,15 +30,11 @@ function findGetParameter(parameterName) {
     return result;
 }
 
-function send_api_req(method, url, fields, callback, btn = undefined){
-    url += "?"
-    dataform = new FormData()
+function api_req(method, url, fields, callback, btn = undefined){
+    dataform = ""
+    fields['_csrf'] = req_csrfToken
     for(const [field, value] of Object.entries(fields)){
-        if(method == "POST"){
-            dataform.append(field, value)
-        } else {
-            url += field + "=" + encodeURI(value) + "&"
-        }
+        dataform += field + "=" + encodeURI(value) + "&"
     }
 
     var btnVal = ""
@@ -29,13 +44,11 @@ function send_api_req(method, url, fields, callback, btn = undefined){
         btn.innerHTML = "<i class='fas fa-circle-notch fa-spin'></i>"
     }
     
-
     $.ajax({
         url: url,
         type: method,
+        xhrFields: { withCredentials: true },
         data: dataform,
-        contentType: false,
-        processData: false,
         complete: function(xhr, status){
             if(btn != undefined){
                 btn.innerHTML = btnVal
@@ -43,10 +56,10 @@ function send_api_req(method, url, fields, callback, btn = undefined){
             }
         },
         error: function(xhr, status, err){
-          callback(err, xhr)
+          callback(true, xhr)
         },
         success: function(data, status, xhr){
-          callback(undefined, xhr)
+          callback(false, xhr)
         }
     });
 }

@@ -7,3 +7,5 @@ function openNav() {
 function closeNav() {
   document.getElementById("mySidenav").style.left = "-250px";
 }
+
+/* set the sidebar contents in function of the status of the user */ 

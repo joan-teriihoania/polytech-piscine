@@ -1,11 +1,12 @@
 {
 	"views":{
-		"/": {
-			"filename": "test",
+      "/": {
+			"filename": "home",
 			"title": "Accueil",
 			"css": [],
 			"js": [],
 			"login": false,
+			"admin": false,
 			"autorefresh": true
 		},
     "/login": {
@@ -14,7 +15,8 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": true
+			"admin": false,
+			"autorefresh": false
 		},
     "/recovery": {
 			"filename": "recovery",
@@ -22,15 +24,17 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": true
+			"admin": false,
+			"autorefresh": false
 		},
-    "/event": {
+    "/admin/events": {
 			"filename": "events",
 			"title": "Gestion des évènements",
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": true
+			"admin": true,
+			"autorefresh": false
 		},
     "/event/:event_id/edit": {
 			"filename": "edit",
@@ -38,43 +42,127 @@
 			"css": [],
 			"js": [],
 			"login": false,
-			"autorefresh": true
+			"admin": true,
+			"autorefresh": false
 		},
-    "/event/:event_id/view": {
-			"filename": "view",
-			"title": "Visualisation des évènements",
-			"css": [],
-			"js": [],
-			"login": false,
-			"autorefresh": true
-		},
-    "/event/:event_id/register": {
+    "/event/:event_id/reserve": {
 			"filename": "reserve",
 			"title": "Réservation de créneaux",
 			"css": [],
 			"js": [],
-			"login": false,
-			"autorefresh": true
+			"login": true,
+			"admin": false,
+			"autorefresh": false
 		},
     "/profile": {
-			"filename": "account",
+			"filename": "profile",
 			"title": "Mon compte",
 			"css": [],
 			"js": [],
-			"login": false,
-			"autorefresh": true
+			"login": true,
+			"admin": false,
+			"autorefresh": false
     },
-    "/users": {
+    "/admin/users": {
 			"filename": "users",
 			"title": "Gestion des utilisateurs",
 			"css": [],
 			"js": [],
 			"login": false,
+			"admin":true,
+			"autorefresh": false
+    },
+      "/help": {
+			"filename": "help",
+			"title": "Besoin d'aide?",
+			"css": [],
+			"js": [],
+			"login": false,
+			"admin": false,
 			"autorefresh": true
-    }
+    },
+    "/register": {
+			"filename": "register",
+			"title": "Page d'inscription",
+			"css": [],
+			"js": [],
+			"login": false,
+			"admin": false,
+			"autorefresh": false
+		},
+    "/logout": {
+			"filename": "logout",
+			"title": "Déconnexion",
+			"css": [],
+			"js": [],
+			"login": true,
+			"admin": false,
+			"autorefresh": false
+		}
 	},
 	"api":{
+    "PUT": {
+      "/event": {
+				"filename": "create_event.js",
+				"login": false,
+        "admin": false,
+				"description": "Créé l'événement",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/group": {
+				"filename": "create_group.js",
+				"login": false,
+        "admin": false,
+				"description": "Créé un groupe",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      }
+    },
+    "DELETE": {
+      "/group/:group_id": {
+				"filename": "delete_group.js",
+				"login": false,
+        "admin": false,
+				"description": "Supprime le groupe",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      }
+    },
 		"POST": {
+      "/user/group/:group_id/join": {
+				"filename": "group_join.js",
+				"login": true,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
+			"/login": {
+				"filename": "login.js",
+				"login": false,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
+      "/register": {
+				"filename": "register.js",
+				"login": false,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
 			"/ping": {
 				"filename": "ping.js",
 				"login": false,
@@ -83,9 +171,139 @@
 					"success": "JSON",
 					"error": "String"
 				}
-			}
+			},
+      "/user/:user_id": {
+				"filename": "edit_user.js",
+				"login": false,
+        "admin": false,
+				"description": "Modifie les informations de l'utilisateur",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/group/:group_id": {
+				"filename": "edit_group.js",
+				"login": true,
+        "admin": false,
+				"description": "Modifie les informations du groupe",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/creneau/:creneau_id": {
+				"filename": "edit_creneau.js",
+				"login": true,
+        "admin": false,
+				"description": "Modifie les informations du créneau",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      }
 		},
 		"GET": {
+      "/user": {
+				"filename": "users.js",
+				"login": false,
+        "admin": true,
+				"description": "Retourne la liste des utilisateurs ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/examinateur": {
+				"filename": "examinateurs.js",
+				"login": false,
+        "admin": true,
+				"description": "Retourne la liste des examinateurs ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/user/:user_id": {
+				"filename": "user_info.js",
+				"login": false,
+        "admin": false,
+				"description": "Retourne les informations de l'utilisateur",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/event": {
+				"filename": "events.js",
+				"login": false,
+        "admin": false,
+				"description": "Retourne la liste des événements ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/promotion": {
+				"filename": "promotions.js",
+				"login": false,
+        "admin": false,
+				"description": "Retourne la liste des promotions ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/promotion/:promotion_id": {
+				"filename": "promotion_info.js",
+				"login": false,
+        "admin": false,
+				"description": "Retourne la liste des promotions ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/event/:event_id/creneaux": {
+				"filename": "creneaux.js",
+				"login": false,
+				"admin": false,
+				"description": "Retourne la liste des créneaux d'un événement ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/event/:event_id/groups": {
+				"filename": "groups.js",
+				"login": false,
+				"admin": false,
+				"description": "Retourne la liste des créneaux d'un événement ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/group": {
+				"filename": "all_groups.js",
+				"login": false,
+				"admin": false,
+				"description": "Retourne la liste des groupes ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/group/:group_id": {
+				"filename": "group_info.js",
+				"login": false,
+				"admin": false,
+				"description": "Retourne la liste des groupes ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
 			"/ping": {
 				"filename": "ping.js",
 				"login": false,

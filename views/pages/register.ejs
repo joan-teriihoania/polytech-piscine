@@ -1,0 +1,48 @@
+<!-- Creation of new event -->
+<div class="row mh-100vh">
+  <div class="col-10 col-sm-8 col-md-auto col-lg-6 offset-1 offset-sm-2 offset-md-3 offset-lg-0 align-self-center d-lg-flex align-items-lg-center align-self-lg-stretch p-5  my-5 my-lg-0 bg-main " id="register-block">
+    <div class="ml-auto mr-auto mb-3">
+      <h1 class="blue-polytech">Créez votre compte</h1>
+      <br><hr><br>
+      <form id="register-form">
+      	<div class="form-group">
+          <label>Nom</label>
+          <input id="register-name" type="text"  class="form-control" placeholder="Potter"  required/>
+        </div>
+        <div class="form-group">
+          <label>Prénom</label>
+          <input id="register-firstname" type="text"   class="form-control" placeholder="Harry" required/>
+        </div>
+      	<div class="form-group">
+        	<label>Adresse mail</label>
+        	<input type="email" class="form-control" id="register-email" aria-describedby="emailHelp" placeholder="harry.potter@etu.umontpellier.fr">
+      	</div>
+      	<div class="form-group">
+      		<label class="text-dark">Mot de passe</label>
+        	<input id="register-password" type="password" class="form-control" placeholder="********" required>
+      	</div>
+      	<div class="form-group">
+      		<div class="form-group">
+      		<label class="text-dark">Confirmation du mot de passe</label>
+        	<input id="register-password-confirm" type="password" class="form-control" placeholder="********" required>
+      	</div>
+<!-- Selection of the promotion -->
+      	<div class="form-group">
+        	<label for="tegister-promo_id" class="form-label">Promotion</label>
+        	<select class="form-control" id="register-promo_id" required>
+          <%
+            for(const [key, promo] of Object.entries(promos)){
+            %>
+              <option value="<%- promo._id.toString() %>">IG<%- promo.annePromo %> <%- promo.anneScolaire  %></option>
+            <%
+            }
+          %>
+        	</select>
+      	</div>
+<!-- envoyer la requete d'inscription --> 
+      	<button class="btn btn-primary text-white" id="register-form-submit" type="submit">S'inscrire</button>
+    	</form>
+    	<br><br><hr>
+  	</div>
+	</div>
+</div>

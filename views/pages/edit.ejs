@@ -1,0 +1,18 @@
+<div class="blue-polytech bg-main" id="event1-block">
+  <div>
+    <br><br>
+    <h1>Configuration des créneaux</h1>
+    <br><br><hr>
+  </div>
+  <div id='calendar_admin' class="fc ml-3 mr-3 mb-3">
+    <br>
+  </div>
+</div>
+  <div class="blue-polytech bg-main" id="event1-block">
+    <button onclick="save_creneaux()" class="btn btn-primary m-3 w-25" id="edit-export-calendar-submit" type="button">Sauvegarder</button>
+    <button onclick="export_PDF()" class="btn btn-primary m-3 w-25" id="edit-export-calendar-submit" type="button">Exporter en PDF</button>
+  </div>
+  <br>
+<script>
+  var event_id = "<%= req.params.event_id %>"
+</script>

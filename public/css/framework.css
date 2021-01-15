@@ -1,12 +1,19 @@
-.openNavButton {
+.homeButton {
   position: fixed;
   top:10px;
   left:10px;
   z-index: 8; /* Stay on top */
 }
 
+.openNavButton {
+  position: fixed;
+  top: 10px;
+  left: 120px;
+  z-index: 8;
+}
+
 .openNavButton:hover {
-  background-color: #0f9fd4e3;
+  background-color: #d4d4d4e1;
 }
 
 /* The side navigation menu */
@@ -17,7 +24,7 @@
   z-index: 9; /* Stay on top */
   top: 0; /* Stay at the top */
   left: -250px;
-  background-color:  #0f9fd4e3; /* Black*/
+  background-image: url(/img/sidebar-background.jpg);
   overflow-x: hidden; /* Disable horizontal scroll */
   padding-top: 60px; /* Place content 60px from the top */
   transition: .5s; /* 0.5 second transition effect to slide in the sidenav */
@@ -36,7 +43,7 @@
 /* When you mouse over the navigation links, change their color */
 .sidenav a:hover {
   text-decoration: none;
-  color: #ccc;
+  color: rgba(226, 226, 226, 0.712);
 }
 
 /* Position and style the close button (top right corner) */
@@ -66,6 +73,17 @@
 .span {
   color:white;
 }
-body{
-  background-image: url(/img/polytech-montpellier-presentation.jpg);
+
+body, html {
+  height: 100%;
+}
+
+body {
+  background-attachment: fixed;
+  background-image: url(/img/polytechHD.jpg);
+  background-repeat: no-repeat;
+  background-position:center;
+  height: 100%;
+  width: 100%;
+  background-size: cover;
 }

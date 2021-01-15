@@ -5,102 +5,80 @@
 "use strict";
 
 const fs = require('fs');
-const sqlite3 = require('sqlite3');
 const server = require('./server')
+var ObjectId = require('mongodb').ObjectId; 
+const MongoClient = require('mongodb').MongoClient;
+const client = new MongoClient(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+
+var database = undefined
+client.connect().then(() => {
+    database = client.db('piscine');
+
+    
+    fs.readFile("./database_template.json", function(err, database_template){
+        database_template = JSON.parse(database_template.toString())
+        for (const [tablename, rows] of Object.entries(database_template)) {
+            console.log("[DB-CONFIG] Table " + tablename + " configured")
+            database.listCollections().toArray(function(err, items) {
+              items = items.map(a => a.name)
+              if(!items.includes(tablename)){
+                database.createCollection(tablename)
+              }
+            })
+        }
+    })
+})
+
+function checkObjectId(text){
+  var checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$")
+  return checkForHexRegExp.test(text)
+}
 
 module.exports = {
-    createDB: function() {        
-        return new sqlite3.Database('database.sqlite3')
+    isConnected: function(){
+      return (database != undefined)
     },
-    createTable: function(db, tablename, rows) {
-        var templateRows = [{
-            name: "",
-            type: "",
-            primary: false,
-            not_null: false
-        }]
-    
-        var rowsString = []
-        for (var row of rows) {
-            var rowString = row.name
-            rowString += " " + row.type
-            if(row.primary){
-                rowString += " PRIMARY KEY"
-            } else {
-                if(row.not_null){
-                    rowString += " NOT NULL"
-                }
-            }
-            rowsString.push(rowString)
-        }
-    
-        db.run("CREATE TABLE IF NOT EXISTS " + tablename + "(" + rowsString.join(", ") + ")");
+    createTable: function(tablename){
+        database.createCollection(tablename)
     },
-    insert: function(db, tablename, rows) {
-        var templateRows = {
-            "rowName": "rowContent"
-        }
-
-        var lastIDs = []
-        
-        return new Promise(function(resolve, reject){
-            var promises = []
-            for(var row of rows){
-                var cols = []
-                var values = []
-                
-                for (const [col, value] of Object.entries(row)) {
-                    cols.push(col)
-                    if(Number.isInteger(value)){
-                        values.push(value)
-                    } else {
-                        values.push('"' + value + '"')
-                    }
-                }
-                
-                promises.push(
-                    new Promise(function(resolve, reject){
-                        db.run("INSERT INTO " + tablename + "("+cols.join(', ')+") VALUES ("+values.join(", ")+")", function(err){
-                            if(err){
-                                reject(err)
-                            } else {
-                                lastIDs.push(this.lastID)
-                                resolve()
-                            }
-                        })
-                    })
-                )
-            }
-
-            Promise.all(promises).then(() => {
-                resolve(lastIDs)
-            }).catch(() => {
-                reject()
-            })
-            
+    insert: function(tablename, rows) {
+      database.collection(tablename).insertOne(rows)
+    },
+    deleteOne: function(tablename, query, callback){
+        if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+      database.collection(tablename).deleteOne(query).then((result) => {
+        callback(result)
+      }).catch((err) => {
+        callback(err)
+      })
+    },
+    selectOne: function(tablename, query, options, callback) {
+        if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+        database.collection(tablename).findOne(query, options).then((result) => {
+          callback(result)
+        }).catch((err) => {
+          callback(err)
         })
     },
-    run: function(db, request){
-        return new Promise(function(resolve, reject){
-            db.run(request, function(err){
-                if(err){
-                    console.log(err)
-                    reject(err)
-                } else {
-                    resolve()
-                }
-            })
+    selectAll: function(tablename, query, options, callback) {
+        if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+        database.collection(tablename).find(query, options).toArray().then((result) => {
+          callback(result) // returns array
+        }).catch((err) => {
+          callback(err)
         })
     },
-    selectAll: function(db, tablename, callback) {
-        this.select(db, "SELECT * FROM " + tablename, callback)
-    },
-    select: function(db, request, callback) {
-        db.all(request, function(err, rows){
-            callback(rows)
-        });
+    update: function(tablename, query, fields, callback){
+      if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+      const options = { upsert: true };
+      const updateDoc = {$set: fields};
+      database.collection(tablename).updateOne(query, updateDoc, options).then((result) => {
+        callback(result)
+      }).catch((err) => {
+        callback(err)
+      })
     },
     closeDB: function() {
-        db.close();
+        client.close();
     }
 }

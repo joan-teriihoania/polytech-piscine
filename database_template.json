@@ -1,40 +1,60 @@
 {
-    "users":[
-        {
-            "name": "user_id",
-            "type": "INTEGER",
-            "primary": true,
-            "not_null": false
-        },
-        {
-            "name": "username",
-            "type": "TEXT",
-            "primary": false,
-            "not_null": true
-        },
-        {
-            "name": "email",
-            "type": "TEXT UNIQUE",
-            "primary": false,
-            "not_null": true
-        },
-        {
-            "name": "password",
-            "type": "TEXT",
-            "primary": false,
-            "not_null": true
-        },
-        {
-            "name": "img_profile",
-            "type": "TEXT",
-            "primary": false,
-            "not_null": false
-        },
-        {
-            "name": "auth_key",
-            "type": "TEXT UNIQUE",
-            "primary": false,
-            "not_null": true
-        }
-    ]
+  "users": {
+    "firstName": "",
+    "lastName": "",
+    "email": "",
+    "password": "",
+    "promo_id": "",
+    "group_id": ""
+  },
+  "groupes": {
+    "groupname": "",
+    "event_id": ""
+  },
+  "promos":{
+    "anneePromo": 0,
+    "anneScolaire": 0,
+    "event_id": ""
+  },
+  "salles":{
+    "batimentSalle": "",
+    "libelleSalle": ""
+  },
+  "examinateurs":{
+    "nomExaminateur": "",
+    "prenomExaminateur": ""
+  },
+  "events":{
+    "nomEvent": "",
+    "type_event_id": "",
+    "description": "",
+    "dureeCreneau": 0,
+    "dateDebut": "",
+    "dateFin": "",
+    "heureDebut": "",
+    "heurePause": "",
+    "heureReprise": "",
+    "heureFin": "",
+    "promo_id": ""
+  },
+  "examiner": {
+    "examinateur_id": "",
+    "creneau_id": ""
+  },
+  "creneaux": {
+    "heureDebut": "",
+    "heureFin": "",
+    "date": "",
+    "nomTuteurPolytech": "",
+    "prenomTuteurPolytech": "",
+    "nomTuteurProjet": "",
+    "prenomTuteurProjet": "",
+    "nomTuteurStage": "",
+    "prenomTuteurStage": "",
+    "denomEntreprise": "",
+    "jury": "",
+    "salle": "",
+    "group_id": "",
+    "event_id": ""
+  }
 }
