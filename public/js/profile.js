@@ -72,6 +72,24 @@ if($('#choose-group-form').length > 0){
     });
 }
 
+/* Edit password */
+if($('#change-password-form').length > 0){
+    $('#change-password-form').on('submit', function(e) {
+        e.preventDefault();
+        api_req('POST', '/api/v1/profile', {
+          oldpassword: $('#oldpassword').val()
+          newpassword1: $('#newpassword1').val()
+          newpassword2: $('#newpassword2').val()
+          email: user.email
+        }, function(err, xhr){
+          if(!err){
+            toastr.success('<b>Le mot de passe a bien été modifié</b><br>' + xhr.responseText)
+          }else{
+            toastr.error('<b>Echec lors de la modification du mot de passe</b><br>' + xhr.responseText)
+          }
+        }, document.getElementById('change-password-submit'))
+    });
+}
 
 /*async function create_creneau(){
   const {value: newcreneau} = await Swal.fire({

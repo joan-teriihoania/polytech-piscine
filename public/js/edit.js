@@ -5,8 +5,7 @@ function save_creneaux(){
   events = calendar_admin.getEvents()
   for(const [key, event_] of Object.entries(events)){
     event = event_._def.extendedProps
-    console.log(event)
-    
+    console.log(event)   
     if(event._id){
       api_req("POST", "/api/v1/creneau/" + event._id, {
         date: event_.startStr,
@@ -18,6 +17,19 @@ function save_creneaux(){
     }
   }
 }
+
+
+
+
+/*function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heuredebutdej,heurefindej,durée){
+  jour=datedebut
+  heure=heuredebutjour
+  while jour<=datefin{
+    while heure<heurefinjour{
+      if ((heure<=heuredebutdej-durée) || (heure>=heurefindej) && )
+    }
+  }
+}*/
 
 async function edit_group_creneau(){
   api_req("GET", "/api/v1/group", {}, async function(err, xhr){

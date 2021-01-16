@@ -154,6 +154,15 @@
 					"error": "String"
 				}
 			},
+			"/profile": {
+				"filename": "profile.js",
+				"login": true,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
       "/register": {
 				"filename": "register.js",
 				"login": false,
