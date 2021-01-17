@@ -12,9 +12,13 @@
           <%  if (req.user.isAdmin){ %>
                 <p>Administrateur</p>
           <% } else { %>
-                <p>Etudiant<br><br>Promotion:<br><span id="account-user-promotion"></span><a class="btn btn-sm btn-link" onclick="change_user_promo()"><i class="fas fa-edit"></i></a></p>
+                <p>Etudiant<br><br>Promotion:<br>
+                <form id="promotion-form"> 
+                <span id="profile-promotion">IG<%= promo.annePromo %> <%= promo.anneScolaire %></span><a class="btn btn-sm btn-link" id="promotion-submit" onclick="change_user_promo()"><i class="fas fa-edit"></i></a></p>
+                </form>
           <% } %>
         <% } %>
+        
 	<br><br>
   	<a class="btn btn-primary  text-center " data-toggle="collapse" href="#multiCollapseExample1" role="button" aria-expanded="false" aria-controls="multiCollapseExample1">Modifier le mot de passe</a>
     <br><br>
@@ -82,8 +86,34 @@
               <div class="ml-3 mr-3">
                 <!-- name of the groupe -->
                 <form id="create-group-form">
-                  <input id="group-name" class="form-control input-group" name="grouname" placeholder="Nom de votre groupe" required>
-                  <small><i>Veuillez saisir votre nom de groupe</i></small>
+                  <div>
+                    <label for="group-name">Nom du groupe</label>
+                    <input id="group-name" class="form-control input-group" name="grouname" placeholder="Groupe 6" required>
+                  </div>
+                  <div>
+                    <label for="group-description">Description</label>
+                    <input id="group-description" class="form-control input-group" placeholder="Projet X / Stage Google" required>
+                  </div>
+                  <div>
+                  <label for="tpol-name">Nom du tuteur Polytech</label>
+                    <input id="tpol-name" class="form-control input-group" placeholder="Berry" required>
+                  </div>
+                  <div>
+                  <label for="tpol-firstname">Prénom du tuteur Polytech</label>
+                    <input id="tpol-firstname" class="form-control input-group" placeholder="Vincent" required>
+                  </div>
+                  <div>
+                  <label for="t-name">Nom du tuteur de stage/projet</label>
+                    <input id="t-name" class="form-control input-group" placeholder="Godel" required>
+                  </div>
+                  <div>
+                  <label for="t-firstname">Prénom du tuteur de stage/projet</label>
+                    <input id="t-firstname" class="form-control input-group" placeholder="Thomas" required>
+                  </div>
+                  <div>
+                  <label for="company-name">Nom de l'entreprise</label>
+                    <input id="company-name" class="form-control input-group" placeholder="Thomas" required>
+                  </div>
                   <br><br>
                   <button class="btn btn-primary" id="create-group-submit" type="submit">Créer le groupe</button>
                 </form>

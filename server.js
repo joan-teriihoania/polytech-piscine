@@ -51,11 +51,12 @@ server.use(sessions({
 }));
 
 server.use(csurf());
-server.use(auth.loadUserFromSession);
 
 // error handling
-server.use((err, req, res, next) => {
-  next()
+server.all("*", function(req, res, next){
+  auth.loadUserFromSession(req, res, function(err){
+    next()
+  })
 });
 
 // fin login
@@ -203,7 +204,7 @@ fs.readFile("./router.json", function(err, routerContent){
 
 // FUNCTIONS
 
-function render_page(view, req, res, use_framework=true, replaceValues = {}){
+function render_page(view, req, res, use_framework=true, replaceValues = {}, attempt = 0){
     fs.readFile("./views/framework.ejs", function(err, framework){
         if(err){console.log(err)}
         if(use_framework){
@@ -215,28 +216,14 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
         fs.readFile("./views/pages/" + view['filename'] + ".ejs", function(err, page){
             if(!err){
                 var promise
+
                 try {
                     var pageController = require('./views/controllers/' + view['filename'] + '.js')
+                    
                     promise = new Promise(function(resolve, reject){
-                        var ressourceFolder = './views/pages/' + view['filename'] + '/'
-                        var ressourceFilesPromise = []
-                        var ressourceFiles = {}
-                        if(fs.existsSync(ressourceFolder)){
-                            ressourceFilesPromise.push(new Promise(function(resolve, reject){
-                                fs.readdir(ressourceFolder, (err, ressourceFilesNames) => {
-                                    fm.readFiles(ressourceFolder, ressourceFilesNames, function(_ressourceFiles){
-                                        ressourceFiles = _ressourceFiles
-                                        resolve()
-                                    })
-                                })
-                            }))
-                        }
-
-                        Promise.all(ressourceFilesPromise).then(() => {
-                            pageController.format(page.toString(), {}, req, res, ressourceFiles, function(page, params){
-                                resolve([page, params])
-                            })
-                        })
+                      pageController.format(page.toString(), {}, req, res, [], function(page, params){
+                          resolve([page, params])
+                      })
                     })
                 } catch(err) {
                     promise = new Promise(function(resolve, reject){
@@ -248,79 +235,51 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}){
                     page = returned[0]
                     params = returned[1]
                     if(page == false){return}
-                    var elementsFolder = "./views/elements/"
                     framework = replaceAll(framework, '{{ page }}', page)
-                    fs.readdir(elementsFolder, (err, elementsFiles) => {
-                        fm.readFiles(elementsFolder, elementsFiles, function(dataElementFiles){
-                            let loadElements = []
-    
-                            for (const [filename, content] of Object.entries(dataElementFiles)) {
-                                var _filename = elementsFolder + filename
-                                if(_filename.substring(_filename.length - 2) == "js"){
-                                    var elementController = require(_filename)
-                                    
-                                    var filenameAlone = _filename.split("/")
-                                    filenameAlone = filenameAlone[filenameAlone.length-1]
-                                    loadElements.push(new Promise(function(resolve, reject){
-                                        var keyword = filenameAlone.substring(0, filenameAlone.length - 3)
-                                        elementController.format(dataElementFiles[filename.substring(0, filename.length - 2) + "html"], req, res, function(elementContentGene){
-                                            framework = replaceAll(framework, '{{ '+keyword+' }}', elementContentGene)
-                                            resolve()
-                                        })
-                                    }))
-                                }
-                            }
-                
-                            Promise.all(loadElements)
-                                .then(() => { // all done!
-    
-                                fs.readdir("./public/js", (err, js_scripts) => {
-                                    js_scripts_embed = ""
-                                    if(js_scripts && js_scripts.length > 0){
-                                      for(js_script of js_scripts){
-                                          if(js_script == "autorefresh.js" && !view.autorefresh){continue}
-                                          js_scripts_embed += '<script src="/js/'+js_script+'"></script>\n'
-                                      }
-                                    }
+                    fs.readdir("./public/js", (err, js_scripts) => {
+                        js_scripts_embed = ""
+                        if(js_scripts && js_scripts.length > 0){
+                          for(js_script of js_scripts){
+                              if(js_script == "autorefresh.js" && !view.autorefresh){continue}
+                              js_scripts_embed += '<script src="/js/'+js_script+'"></script>\n'
+                          }
+                        }
 
-                                    framework = framework.replace(/{{ js_scripts }}/gi, js_scripts_embed)
-                                    if(!res.headersSent){
-                                      if(framework && params){
-                                        params['page_title'] = view['title']
-                                        params['req'] = req
-                                        params['db'] = db
-                                        if(!db.isConnected()){
-                                          res.send("DB-ERROR: Please retry.")
-                                          return
-                                        }
-                                        
-                                        try {
-                                          
-                                          user_event_id = "Aucune"
-                                          if(req.user){
-                                            db.selectOne("promos", {_id: req.user.promo_id}, {}, function(promo){
-                                              if(promo){user_event_id = promo.event_id}
-                                              params["user_event_id"] = user_event_id
-                                              framework = ejs.render(framework, params)
-                                              res.send(framework)
-                                            })
-                                          } else {
-                                            params["user_event_id"] = user_event_id
-                                            framework = ejs.render(framework, params)
-                                            res.send(framework)
-                                          }
-                                        } catch(e) {
-                                          res.status(500)
-                                          res.send(e)
-                                        }
-                                      } else {
-                                        res.send("FATAL ERROR")
-                                      }
-                                    }
+                        framework = framework.replace(/{{ js_scripts }}/gi, js_scripts_embed)
+                        if(!res.headersSent){
+                          if(framework && params){
+                            params['page_title'] = view['title']
+                            params['req'] = req
+                            params['db'] = db
+                            if(!db.isConnected() || !params['req']){
+                              res.status(500)
+                              res.send("DB-ERROR: Please retry.")
+                              return
+                            }
+                            
+                            try {
+                              user_event_id = "Aucune"
+                              if(req.user){
+                                db.selectAll("promos", {_id: req.user.promo_id}, {}, function(promo){
+                                  if(promo.length > 0){user_event_id = promo[0].event_id}
+                                  params["user_event_id"] = user_event_id
+                                  framework = ejs.render(framework, params)
+                                  res.send(framework)
                                 })
-                            })
-                        })
-                    });
+                              } else {
+                                params["user_event_id"] = user_event_id
+                                framework = ejs.render(framework, params)
+                                res.send(framework)
+                              }
+                            } catch(e) {
+                              res.status(500)
+                              res.send(e)
+                            }
+                          } else {
+                            res.send("FATAL ERROR")
+                          }
+                        }
+                    })
                 })
             }
         })

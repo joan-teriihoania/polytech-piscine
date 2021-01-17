@@ -6,6 +6,7 @@ if($('#register-form').length > 0){
           lastName: $('#register-firstname').val(),
           email: $('#register-email').val(),
           password: $('#register-password').val(),
+          password_confirm: $('#register-password-confirm').val(),
           promo_id: $('#register-promo_id').val(),
           group_id: "Aucun"
         }, function(err, xhr){

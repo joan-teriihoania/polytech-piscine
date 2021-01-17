@@ -6,9 +6,21 @@ const settings = require("../settings");
 
 module.exports = {
   exec: function(req, res){
+    if(req.body.password != req.body.password_confirm){
+      res.status(400)
+      res.send("Les mots de passe ne correspondent pas")
+      return
+    }
+
     let hash = bcrypt.hashSync(req.body.password, settings.BCRYPT_WORK_FACTOR);
     req.body.password = hash;
     let user = new models.User(req.body);
+
+    if(!req.body.email.endsWith('@etu.umontpellier.fr')){
+      res.status(400)
+      res.send("Votre mail doit terminer par @etu.umontpellier.fr")
+      return
+    }
 
     user.save((err) => {
       if (err) {

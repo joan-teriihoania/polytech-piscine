@@ -9,7 +9,13 @@
   },
   "groupes": {
     "groupname": "",
-    "event_id": ""
+    "event_id": "",
+    "description":"",
+    "nomTuteurPolytech": "",
+    "prenomTuteurPolytech": "",
+    "nomTuteur": "",
+    "prenomTuteur": "",
+    "nomEntreprise": ""
   },
   "promos":{
     "anneePromo": 0,
@@ -45,13 +51,6 @@
     "heureDebut": "",
     "heureFin": "",
     "date": "",
-    "nomTuteurPolytech": "",
-    "prenomTuteurPolytech": "",
-    "nomTuteurProjet": "",
-    "prenomTuteurProjet": "",
-    "nomTuteurStage": "",
-    "prenomTuteurStage": "",
-    "denomEntreprise": "",
     "jury": "",
     "salle": "",
     "group_id": "",

@@ -6,6 +6,7 @@ module.exports = {
 
       db.selectOne("promos", {_id: req.user.promo_id}, {}, function(promo){
         if(promo){
+          params["promo"] = promo
           db.selectAll("groupes", {}, {}, function(groups){
             if(promo.event_id){
               params["user_event_id"] = promo.event_id
@@ -28,7 +29,9 @@ module.exports = {
             }
 
             Promise.all(promise).then(() => {
-              callback(content, params)
+              setTimeout(function(){
+                callback(content, params)
+              }, 1000)
             })
           })
         }

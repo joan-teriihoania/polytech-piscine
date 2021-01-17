@@ -12,7 +12,12 @@ module.exports = {
                 for(const [key, creneau] of Object.entries(creneaux)){
                   promise.push(new Promise(function(resolve, reject){
                     db.selectAll("groupes", {_id: creneau.group_id}, {}, function(group){
-                      creneau['group'] = group
+                      if(group.length > 0){
+                        creneau['group'] = group[0]
+                      } else {
+                        delete creneau['group_id']
+                      }
+                      
                       db.selectAll("examiner", {creneau_id: creneau._id.toString()}, {}, function(examiner){                    
                         b_promise = []
                         if(examiner.length > 0){

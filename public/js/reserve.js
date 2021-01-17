@@ -1,28 +1,33 @@
 var calendar_user, calendarEl
 
+
 document.addEventListener('DOMContentLoaded', function() {
   calendarEl = document.getElementById('calendar_user');
   calendar_user = buildCalendarUser(calendarEl);
-
-  calendar_user.on('eventClick', function(info){
-  Swal.fire({
-    title: 'Que voulez-vous faire?',
-    showDenyButton: false,
-    showCancelButton: true,
-    confirmButtonText: 'Réserver',
-    cancelButtonText:'Annuler',
-    confirmButtonColor: '#34c924',
-    }).then((result) => {
   
-      if (result.isConfirmed) {
-        Swal.fire('Créneau réservé: ' + info.event.title,'','success')
-        info.el.style.backgroundColor = 'red';
-        //il faut récupérer le groupe de l'utilisateur
-        calendar_user.getEventById(info.event.id).setExtendedProp('group', user.group_id);
-      }
-  })
+  calendar_user.on('eventClick', function(info){
+    Swal.fire({
+      title: 'Que voulez-vous faire ?',
+      showDenyButton: false,
+      showCancelButton: true,
+      confirmButtonText: 'Réserver',
+      cancelButtonText:'Annuler',
+      confirmButtonColor: '#34c924',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          api_req("POST", '/api/v1/creneau/'+info.event.id+'/reserve', {}, function(err, xhr){
+            if(!err){
+              toastr.success("Créneau réservé !")
+              populate_events(calendar_user)
+            } else {
+              toastr.error(xhr.responseText)
+            }
+          })
+        }
+    })
   });
   calendar_user.render();//affiche le calendrier
+  populate_events(calendar_user)
 });
 
 
@@ -36,6 +41,7 @@ function buildCalendarUser(calendarEl){
       calendarEl.innerHTML = ""
       calendar_user = buildCalendarUser(calendarEl)
       calendar_user.render()
+      populate_events(calendar_user)
     },
 
     initialView: 'timeGridWeek', //affichage par défaut
@@ -57,29 +63,26 @@ function buildCalendarUser(calendarEl){
 
     allDaySlot: false,// enlève l'affichage des évènements journaliers
     expandRows: true,// ajuste la taille des lignes 
+  });
+}
 
-    //events:'/api/v1/event/'+event_id+'/creneaux',
-    events: [
-      {
-        title: 'Salle 201',
-        start: '2021-01-15T13:30:00',
+function populate_events(calendar){
+  api_req("GET", '/api/v1/event/'+window.location.pathname.split('/')[2]+'/creneaux', {}, function(err, xhr){
+    if(!err){
+      calendar.removeAllEvents()
+      for(const [index, creneau] of Object.entries(xhr.responseJSON)){
+        calendar.addEvent({
+          id: creneau._id,
+          title: creneau.group ? creneau.group.groupname : "Libre",
+          start: creneau.date,
+          backgroundColor: creneau.group ? "red" : undefined
+        })
       }
-      ]
-
-   });
-}
-
-
-function changeEventColor(calendarEl){
-  var events = calendarEl.getEvents();
-  for (ev in events){
-    if (ev.extendedProps.groups == null){
-      ev.el.style.backgroundColor = '#cecece';
+    } else {
+      Swal.fire("Nous n'avons pas pu charger le planning", '', 'error')
     }
-  }
+  })
 }
-
-changeEventColor(calendar_user);
 
 
 function zoomOutMobile() {
@@ -94,33 +97,3 @@ function zoomOutMobile() {
 zoomOutMobile();
 
 
-/* Join a group 
-if($('#choose-group-form').length > 0){
-    $('#choose-group-form').on('submit', function(e) {
-        e.preventDefault();
-        api_req('POST', '/api/v1/user/group/'+$('#group-name-chosen').val()+'/join', {
-          user_id: user.user_id
-        }, function(err, xhr){
-          if(!err){
-            Swal.fire({
-              icon: 'success',
-              title: 'Affectation au groupe en cours...',
-              text: "Vous serez redirigé dans quelques instants",
-              showConfirmButton: false,
-            })
-            Swal.showLoading()
-
-            setTimeout(() => {
-              window.location.href = '/profile'
-            }, 2000)
-          }else{
-            toastr.error('<b>Echec lors de l\'affectation du groupe</b><br>' + xhr.responseText)
-          }
-        }, document.getElementById('choose-group-submit'))
-    });
-}*/
-
-var pdf = new jsPDF("portrait", "in", "letter");
-pdf.setFontSize(20);
-pdf.text(0.5, 1, "Calendar");
-var blob = pdf.output("blob");

@@ -5,7 +5,7 @@ function save_creneaux(){
   events = calendar_admin.getEvents()
   for(const [key, event_] of Object.entries(events)){
     event = event_._def.extendedProps
-    console.log(event)   
+    console.log(event)
     if(event._id){
       api_req("POST", "/api/v1/creneau/" + event._id, {
         date: event_.startStr,
@@ -20,16 +20,52 @@ function save_creneaux(){
 
 
 
+//creer tous les creneaux a la créatin de l'event 
+function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heuredebutdej,heurefindej,duree){
+  let jourdate=new Date(datedebut+'T01:00:00')
+  let joursemaine=jourdate.getday()
+  let jour=datedebut
+  let heure=heuredebutjour
+  let salle='aucune'
+  //si le jour de debut est un dimanche 
+  if (joursemaine==0){
+    //il faut ajouter 1 jour mais je ne sais pas comment faire
+    jour = SELECT jour + INTERVAL 1 DAY;
+  } 
+  //si le jour de debut est un samedi 
+  else if (joursemaine==6){
+    //il faut ajouter 2 jour mais je ne sais pas comment 
+    jour = SELECT jour + INTERVAL 2 DAY;
+  }
+  while jour<=datefin {
+    while (heure<heurefinjour-duree){
+      if (((heure<=heuredebutdej-duree) || (heure>=heurefindej)){
+        calendar_admin.addEvent({
+                      title: ('Salle ' + salle),
+                      start: (new Date(jour + 'T' + heure + ':00'),
+                      id: (salle + new Date(jour + 'T' + heure + ':00')),
 
-/*function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heuredebutdej,heurefindej,durée){
-  jour=datedebut
-  heure=heuredebutjour
-  while jour<=datefin{
-    while heure<heurefinjour{
-      if ((heure<=heuredebutdej-durée) || (heure>=heurefindej) && )
+                      extendedProps: {
+                      salle: salle,
+                      jury:[],
+                      group:"aucun",
+                      },
+                    });
+        api_req("PUT","/api/v1/event/"+event_id+"/créneaux/")
+      }
+      heure=heure+duree
+    }
+    jourdate=new Date(jour+'T01:00:00')
+    joursemaine=jourdate.getday()
+    //si le jour est un vendredi 
+    if (joursemaine==5){
+      jour = "SELECT jour + INTERVAL 3 DAY";
+    } 
+    else {
+      jour = "SELECT jour + INTERVAL 1 DAY";
     }
   }
-}*/
+}
 
 async function edit_group_creneau(){
   api_req("GET", "/api/v1/group", {}, async function(err, xhr){
@@ -39,8 +75,8 @@ async function edit_group_creneau(){
         title: "Changer le groupe",
         html:
           '<select class="form-control" list="GroupsListOptions" id="select-groups" required/>'+
-                    groups.map((group) => {return '<option value="'+group._id.toString()+'">'+group.groupname+'</option>'}).join('\n') +
-                  '</select>',
+            groups.map((group) => {return '<option value="'+group._id.toString()+'">'+group.groupname+'</option>'}).join('\n') +
+          '</select>',
         focusConfirm: false,
         preConfirm: () => {
           console.log(document.getElementById('select-groups').value)
@@ -118,10 +154,14 @@ document.addEventListener('DOMContentLoaded', function() {
           if (result.isConfirmed){
               Swal.fire('Saved!', '', 'success');
               //console.log(document.getElementById('newsallet').value)
-            
               calendar_admin.getEventById(info.event.id).setExtendedProp('salle',changecreneau[0]);
               calendar_admin.getEventById(info.event.id).setExtendedProp('jury',changecreneau[1]);
-              calendar_admin.getEventById(info.event.id).setExtendedProp('group',changecreneau[2]);
+              if changecreneau[2]=='aucun'{
+                calendar_admin.getEventById(info.event.id).setExtendedProp('group',null);
+              }
+              else {
+                calendar_admin.getEventById(info.event.id).setExtendedProp('group',changecreneau[2]);
+              }
               //calendar_admin.getEventById(info.event.id).setProp('title',('salle '+ changecreneau[0]+' jurys '+changecreneau[1]+'   group '+changecreneau[3]));
               changeEventColor(calendar_admin);
               
@@ -284,7 +324,7 @@ function buildCalendarAdmin(calendarEl){
                       extendedProps: {
                       salle: newcreneau[2],
                       jury:[],
-                      group:"aucun",
+                      group:undefined,
                       },
                     });
                   } else {

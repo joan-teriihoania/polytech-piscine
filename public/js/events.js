@@ -109,6 +109,9 @@ if($('#events-form').length > 0){
               text: "Vous serez redirigé dans quelques instants",
               showConfirmButton: false,
             })
+            //console.log($('#events-start-date').val())
+            //console.log($('#events-start-time').val())
+            //console.log(weekdays($('#events-start-date').val()))
             Swal.showLoading()
 
             setTimeout(() => {

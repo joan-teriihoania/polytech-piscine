@@ -49,23 +49,23 @@ module.exports.createUserSession = (req, res, user) => {
  *  @param {Object} res  - The http response object.
  *  @param {Object} next - Continue processing the request.
  */
-module.exports.loadUserFromSession = (req, res, next) => {
+module.exports.loadUserFromSession = (req, res, callback) => {
   if (!(req.session && req.session.userToken)) {
-    return next();
+    return callback();
   }
 
   nJwt.verify(req.session.userToken, settings.JWT_SIGNING_KEY, settings.JWT_SIGNING_ALGORITHM, (err, verifiedJwt) => {
     if (err) {
-      return next();
+      return callback();
     }
 
     models.User.findById(verifiedJwt.body.sub, (err, user) => {
       if (err) {
-        return next(err);
+        return callback(err);
       }
 
       if (!user) {
-        return next();
+        return callback();
       }
 
       // Remove the password hash from the User object.  This way we don't
@@ -81,7 +81,7 @@ module.exports.loadUserFromSession = (req, res, next) => {
       res.locals.user = user;
       res.locals.user.isAdmin = (user._id == process.env.ADMIN_USERID)
 
-      next();
+      callback();
     });
   });
 }

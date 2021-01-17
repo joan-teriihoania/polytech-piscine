@@ -23,3 +23,4 @@ if($('#login-form').length > 0){
         }, document.getElementById('login-form-submit'))
     });
 }
+

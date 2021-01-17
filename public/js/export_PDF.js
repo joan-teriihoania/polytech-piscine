@@ -1,3 +1,4 @@
+/*
 function export_PDF(){
   var doc = new jsPDF();          
   var elementHandler = {
@@ -16,3 +17,4 @@ function export_PDF(){
 
   doc.output("dataurlnewwindow");
 }
+*/

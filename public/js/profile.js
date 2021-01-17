@@ -1,11 +1,16 @@
-
 /* Create a group */
 if($('#create-group-form').length > 0){
     $('#create-group-form').on('submit', function(e) {
         e.preventDefault();
         api_req('PUT', '/api/v1/group', {
           groupname : $('#group-name').val(),
-          event_id : user_event_id
+          event_id : user_event_id,
+          description : $('#group-description'),
+          nomTuteurPolytech : $('#tpol-name'),
+          prenomTuteurPolytech : ('#tpol-firstname'),
+          nomTuteur : ('#t-name'),
+          prenomTuteur : ('#t-firstname'),
+          nomEntreprise : ('#company-name')
         }, function(err, xhr){
           if(!err){
             Swal.fire({
@@ -15,7 +20,6 @@ if($('#create-group-form').length > 0){
               showConfirmButton: false,
             })
             Swal.showLoading()
-
             setTimeout(() => {
               window.location.href = '/profile'
             }, 2000)
@@ -31,9 +35,9 @@ async function change_user_promo(){
     title: "Changer votre promotion",
     html:
       '<select id="promoListOptions" class="form-control">'+
-      '   <option value="IG3">IG3</option>'+
-      '   <option value="IG4">IG4</option>'+
-      '   <option value="IG5">IG5</option>'+
+      '   <option value="IG3 2020">IG3</option>'+
+      '   <option value="IG4 2020">IG4</option>'+
+      '   <option value="IG5 2020">IG5</option>'+
       '</select>',
     focusConfirm: false,
     preConfirm: () => {
@@ -72,24 +76,52 @@ if($('#choose-group-form').length > 0){
     });
 }
 
-/* Edit password */
-if($('#change-password-form').length > 0){
-    $('#change-password-form').on('submit', function(e) {
+/* Select your promotion */
+if($('#promotion-form').length > 0){
+    $('#promotion-form').on('submit', function(e) {
         e.preventDefault();
-        api_req('POST', '/api/v1/profile', {
-          oldpassword: $('#oldpassword').val()
-          newpassword1: $('#newpassword1').val()
-          newpassword2: $('#newpassword2').val()
-          email: user.email
+        api_req('POST', '/api/v1/event', {
+          promo_id : $('#profile-promotion').val(),
         }, function(err, xhr){
           if(!err){
-            toastr.success('<b>Le mot de passe a bien été modifié</b><br>' + xhr.responseText)
+            Swal.fire({
+              icon: 'toastr',
+              title: 'Profil mis à jour',
+              showConfirmButton: false,
+            })
+            Swal.showLoading()
+
+            setTimeout(() => {
+              window.location.href = '/profile'
+            }, 2000)
           }else{
-            toastr.error('<b>Echec lors de la modification du mot de passe</b><br>' + xhr.responseText)
+            toastr.error('<b>Echec lors de la modification de la promotion</b><br>' + xhr.responseText)
           }
-        }, document.getElementById('change-password-submit'))
+        }, document.getElementById('promotion-submit'))
     });
 }
+
+
+/* Edit password */
+/*if($('#change-password-form').length > 0){
+    $('#change-password-form').on('submit', function(e) {
+        e.preventDefault();
+        if($('#newpassword1')){
+          api_req('POST', '/api/v1/profile', {
+            oldpassword: $('#oldpassword').val()
+            newpassword1: $('#newpassword1').val()
+            newpassword2: $('#newpassword2').val()
+            email: user.email
+          }, function(err, xhr){
+            if(!err){
+              toastr.success('<b>Le mot de passe a bien été modifié</b><br>' + xhr.responseText)
+            }else{
+              toastr.error('<b>Echec lors de la modification du mot de passe</b><br>' + xhr.responseText)
+            }
+          }, document.getElementById('change-password-submit'))
+        }
+    });
+}*/
 
 /*async function create_creneau(){
   const {value: newcreneau} = await Swal.fire({

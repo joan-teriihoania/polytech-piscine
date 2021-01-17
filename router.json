@@ -105,7 +105,7 @@
       "/event": {
 				"filename": "create_event.js",
 				"login": false,
-        "admin": false,
+        "admin": true,
 				"description": "Créé l'événement",
 				"return": {
 					"success": "JSON",
@@ -114,7 +114,7 @@
       },
       "/group": {
 				"filename": "create_group.js",
-				"login": false,
+				"login": true,
         "admin": false,
 				"description": "Créé un groupe",
 				"return": {
@@ -127,7 +127,7 @@
       "/group/:group_id": {
 				"filename": "delete_group.js",
 				"login": false,
-        "admin": false,
+        "admin": true,
 				"description": "Supprime le groupe",
 				"return": {
 					"success": "JSON",
@@ -204,8 +204,18 @@
       "/creneau/:creneau_id": {
 				"filename": "edit_creneau.js",
 				"login": true,
-        "admin": false,
+        "admin": true,
 				"description": "Modifie les informations du créneau",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/creneau/:creneau_id/reserve": {
+				"filename": "reserve_creneau.js",
+				"login": true,
+        "admin": false,
+				"description": "Réserve le créneau pour un groupe",
 				"return": {
 					"success": "JSON",
 					"error": "String"
