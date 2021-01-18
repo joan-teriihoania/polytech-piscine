@@ -10,6 +10,10 @@ module.exports = {
                 promise = []
 
                 for(const [key, creneau] of Object.entries(creneaux)){
+                  if(creneau.salle == ""){
+                    delete creneau.salle
+                  }
+                  
                   promise.push(new Promise(function(resolve, reject){
                     db.selectAll("groupes", {_id: creneau.group_id}, {}, function(group){
                       if(group.length > 0){
@@ -20,24 +24,25 @@ module.exports = {
                       
                       db.selectAll("examiner", {creneau_id: creneau._id.toString()}, {}, function(examiner){                    
                         b_promise = []
+                        creneau['jury'] = []
                         if(examiner.length > 0){
                           for(const [key, examiner_] of Object.entries(examiner)){
                             b_promise.push(new Promise(function(resolve, reject){
                               db.selectAll("examinateurs", {_id: examiner_.examinateur_id}, {}, function(examinateurs){
-                                  creneau["jury"] = examinateurs
-                                  toreturn.push(creneau)
-                                  resolve()
+                                creneau["jury"].push(examinateurs[0])
+                                resolve()
                               })
                             }))
                           }
+                          
+                          Promise.all(b_promise).then(() => {
+                            toreturn.push(creneau)
+                            resolve()
+                          })
                         } else {
                           toreturn.push(creneau)
                           resolve()
                         }
-
-                        Promise.all(b_promise).then(() => {
-                          resolve()
-                        })
                       })
                     })
                   }))

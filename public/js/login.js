@@ -1,3 +1,4 @@
+/* login as a student or admin */
 if($('#login-form').length > 0){
     $('#login-form').on('submit', function(e) {
         e.preventDefault();
@@ -13,10 +14,7 @@ if($('#login-form').length > 0){
               showConfirmButton: false,
             })
             Swal.showLoading()
-
-            setTimeout(() => {
-              window.location.href = '/profile'
-            }, 2000)
+            window.location.href = '/profile'
           }else{
             toastr.error('<b>Echec de l\'authentification</b><br>' + xhr.responseText)
           }

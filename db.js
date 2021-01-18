@@ -39,14 +39,25 @@ module.exports = {
       return (database != undefined)
     },
     createTable: function(tablename){
-        database.createCollection(tablename)
+        return database.createCollection(tablename)
     },
     insert: function(tablename, rows) {
-      database.collection(tablename).insertOne(rows)
+      return database.collection(tablename).insertOne(rows)
+    },
+    insertMany: function(tablename, rows) {
+      return database.collection(tablename).insertMany(rows)
     },
     deleteOne: function(tablename, query, callback){
-        if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+      if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
       database.collection(tablename).deleteOne(query).then((result) => {
+        callback(result)
+      }).catch((err) => {
+        callback(err)
+      })
+    },
+    deleteMany: function(tablename, query, callback){
+      if(query['_id'] && checkObjectId(query['_id'])){query['_id'] = ObjectId(query['_id'])}
+      database.collection(tablename).deleteMany(query).then((result) => {
         callback(result)
       }).catch((err) => {
         callback(err)

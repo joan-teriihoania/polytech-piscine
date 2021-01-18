@@ -9,7 +9,7 @@ module.exports = {
   DUPLICATE_KEY_ERROR: 11000,
 
   // sessions will last for 1 full day
-  SESSION_DURATION: 1000 * 60 * 60 * 24,
+  SESSION_DURATION: 1000 * 60 * 60,
 
   // sessions will be extended by 10 minutes if the user is active
   SESSION_EXTENSION_DURATION: 1000 * 60 * 10,

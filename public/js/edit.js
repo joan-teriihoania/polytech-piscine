@@ -1,27 +1,8 @@
 var calendar_admin, calendarEl
 event_id = window.location.pathname.split('/')[2]
 
-function save_creneaux(){
-  events = calendar_admin.getEvents()
-  for(const [key, event_] of Object.entries(events)){
-    event = event_._def.extendedProps
-    console.log(event)
-    if(event._id){
-      api_req("POST", "/api/v1/creneau/" + event._id, {
-        date: event_.startStr,
-      }, async function(err, xhr){
-        if(!err){
-          console.log(xhr)
-        }
-      })
-    }
-  }
-}
-
-
-
 //creer tous les creneaux a la créatin de l'event 
-function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heuredebutdej,heurefindej,duree){
+/*function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heuredebutdej,heurefindej,duree){
   let jourdate=new Date(datedebut+'T01:00:00')
   let joursemaine=jourdate.getday()
   let jour=datedebut
@@ -30,14 +11,14 @@ function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heure
   //si le jour de debut est un dimanche 
   if (joursemaine==0){
     //il faut ajouter 1 jour mais je ne sais pas comment faire
-    jour = SELECT jour + INTERVAL 1 DAY;
+    jour = "SELECT jour + INTERVAL 1 DAY";
   } 
   //si le jour de debut est un samedi 
   else if (joursemaine==6){
     //il faut ajouter 2 jour mais je ne sais pas comment 
-    jour = SELECT jour + INTERVAL 2 DAY;
+    jour = "SELECT jour + INTERVAL 2 DAY";
   }
-  while jour<=datefin {
+  while jour <= datefin {
     while (heure<heurefinjour-duree){
       if (((heure<=heuredebutdej-duree) || (heure>=heurefindej)){
         calendar_admin.addEvent({
@@ -65,7 +46,7 @@ function create_all_creneaux(datedebut,datefin,heuredebutjour,heurefinjour,heure
       jour = "SELECT jour + INTERVAL 1 DAY";
     }
   }
-}
+}*/
 
 async function edit_group_creneau(){
   api_req("GET", "/api/v1/group", {}, async function(err, xhr){
@@ -95,16 +76,23 @@ document.addEventListener('DOMContentLoaded', function() {
   calendarEl = document.getElementById('calendar_admin');
   calendar_admin = buildCalendarAdmin(calendarEl)
   
+  calendar_admin.on('eventChange', function(info){
+    api_req("POST", '/api/v1/creneau/'+info.event.id, {
+        start: info.event.startStr,
+        end: info.event.endStr
+      }, function(err, xhr){
+      if(err){toastr.error(xhr.responseText)}
+      populate_events(calendar_admin)
+    })
+  })
+  
   api_req("GET", "/api/v1/group", {}, function(err, xhr){
+    groups = xhr.responseJSON
     if(!err){
-      groups = xhr.responseJSON.map((group) => {return group.groupname})
-      groups.unshift('Aucun')
       api_req("GET", "/api/v1/examinateur", {}, function(err, xhr){
         if(!err){
-          jurys = xhr.responseJSON.map((examinateur) => {return examinateur.nomExaminateur + " " + examinateur.prenomExaminateur})
+          jurys = xhr.responseJSON
           calendar_admin.on('eventClick', function(info){
-            
-            changecreneau=[null,null,null]
           Swal.fire({
             title: 'Que voulez-vous faire?',
             html:
@@ -116,9 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
                       '<select class="form-control" list="juryListOptions" id="select-jurys" placeholder="Sélectionnez le(s) jury(s)" required multiple="multiple"/>'+
                       
                         jurys.map((jury) => {
-                          return '<option value="'+jury+'" '+
-                            (info.event.extendedProps.jury.includes(jury) ? 'selected="selected"' : "") +
-                          '">'+jury+'</option>'
+                          return '<option value="'+jury._id+'" '+
+                            info.event.extendedProps.jury.map((event_jury) => {
+                              return (event_jury._id == jury._id) ? 'selected="selected"' : ""
+                            }).join('') +
+                          '">'+jury.nomExaminateur + " " + jury.prenomExaminateur+'</option>'
                         }).join('\n') +
 
                       '</select>'+
@@ -127,20 +117,25 @@ document.addEventListener('DOMContentLoaded', function() {
                       //modifier le groupe qui a reserver le créneau 
                       '<label>Le groupe sur ce créneau :</label><br>'+
                       '<select class="form-control" list="groupListOptions" id="select-groups" required/>'+
-                        groups.map((group) => {return '<option value="'+group+'" '+
-                            (info.event.extendedProps.group.includes(group) ? 'selected="selected"' : "") +
-                          '">'+group+'</option>'
+                        "<option value=''>Aucun</option>" +
+                        groups.map((group) => {return '<option value="'+group._id+'" '+
+                            (info.event.extendedProps.group ? (info.event.extendedProps.group._id == group._id ? 'selected="selected"' : "") : "") +
+                          '">'+group.groupname+'</option>'
                         }).join('\n') +
                       '</select>'+
                       '</div>',
             focusConfirm: false,
             preConfirm: () => {
-              console.log(info.event.extendedProps.group)
-              changecreneau = [
-                document.getElementById('newsallet').value,
-                $('#select-jurys').val(), // renvoi une liste
-                document.getElementById('select-groups').value
-              ]
+              var jury = []
+              for(const [i, member] of Object.entries($('#select-jurys').val())){
+                jury.push({examinateur_id: member})
+              }
+
+              return {
+                salle: document.getElementById('newsallet').value,
+                group_id: document.getElementById('select-groups').value,
+                jury: jury
+              }
             },                                              
             showDenyButton: true,
             showConfirmButton: true,
@@ -150,30 +145,28 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonColor: '#34c924',
             cancelButtonColor: '#3085d6',
             }).then((result) => {
-          
+          changecreneau = result
           if (result.isConfirmed){
-              Swal.fire('Saved!', '', 'success');
-              //console.log(document.getElementById('newsallet').value)
-              calendar_admin.getEventById(info.event.id).setExtendedProp('salle',changecreneau[0]);
-              calendar_admin.getEventById(info.event.id).setExtendedProp('jury',changecreneau[1]);
-              if changecreneau[2]=='aucun'{
-                calendar_admin.getEventById(info.event.id).setExtendedProp('group',null);
-              }
-              else {
-                calendar_admin.getEventById(info.event.id).setExtendedProp('group',changecreneau[2]);
-              }
-              //calendar_admin.getEventById(info.event.id).setProp('title',('salle '+ changecreneau[0]+' jurys '+changecreneau[1]+'   group '+changecreneau[3]));
-              changeEventColor(calendar_admin);
-              
-              //ici on doit renvoyer les infos qu'on a eu 
-              
-              
-            //info.el.style.backgroundColor = 'red';
-          } 
-
-          else if (result.isDenied) {
+            api_req("POST", '/api/v1/creneau/'+info.event.id, {
+              salle: result.value.salle,
+              group_id: result.value.group_id
+            }, function(err, xhr){
+              api_req("POST", '/api/v1/creneau/'+info.event.id + "/jury", {
+                jury: JSON.stringify(result.value.jury)
+              }, function(jerr, jxhr){
+                if(!jerr){
+                  toastr.success("Créneau modifié !")
+                  setTimeout(function(){
+                    populate_events(calendar_admin)
+                  }, 1000)
+                } else {
+                  toastr.error(jxhr.responseText)
+                }
+              })
+            })
+          } else if (result.isDenied) {
             Swal.fire({
-              title: 'Êtes-vous sûr de vouloir supprimer le créneau?',
+              title: 'Êtes-vous sûr de vouloir supprimer le créneau ?',
               text: "Cette action est irréversible",
               icon: 'warning',
               showCancelButton: true,
@@ -183,8 +176,14 @@ document.addEventListener('DOMContentLoaded', function() {
               cancelButtonText: 'Annuler',
             }).then((result) => {
                 if (result.isConfirmed) {
-                  Swal.fire('Créneau supprimé', '', 'success')
-                  calendar_admin.getEventById(info.event.id).remove();
+                  api_req("DELETE", '/api/v1/creneau/'+info.event.id, {}, function(err, xhr){
+                    if(!err){
+                      toastr.success("Créneau supprimé !")
+                      populate_events(calendar_admin)
+                    } else {
+                      toastr.error(xhr.responseText)
+                    }
+                  })
                 }
               })
           }
@@ -198,6 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
   calendar_admin.render();//affiche le calendrier
+  populate_events(calendar_admin)
 });
 
 $('#select-students').keypress(function(event){
@@ -214,10 +214,12 @@ function buildCalendarAdmin(calendarEl){
   return new FullCalendar.Calendar(calendarEl, {   
     themeSystem: 'bootstrap',
     handleWindowResize: true,
+    eventDurationEditable: false,
     windowResize: function(arg) {
       calendarEl.innerHTML = ""
       calendar_admin = buildCalendarAdmin(calendarEl)
       calendar_admin.render()
+      populate_events(calendar_admin)
     },
 
     initialView: 'timeGridWeek', /*affichage par défaut*/
@@ -226,7 +228,7 @@ function buildCalendarAdmin(calendarEl){
     editable: true, /* Créneaux modifiables */
 
     headerToolbar: {
-      left: 'prev,next today addEventButton',
+      left: 'prev,next today addEventButton generateEventsButton',
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay'
     },/*affichage de l'en-tête du calendrier */
@@ -294,46 +296,166 @@ function buildCalendarAdmin(calendarEl){
     */
     /* Bouton ajouter un créneau: */
      customButtons: {
-      addEventButton: {
-        text: 'Nouveau créneau',
-        click:async function create_creneau(){
-          const {value: newcreneau} = await Swal.fire({
-            title: "Créer un créneau",
-            html:
-              '<label>Saisir le jour du créneau que vous voulez ajouter</label><input id="newdate" placeholder="MM-JJ" class="mt-0 form-control"><br>' +
-              '<label>Saisir l\'heure de début du créneau </label><input id="hour" placeholder="00:00" class="mt-0 form-control"><br>' +
-              '<label>Saisir la salle </label><input placeholder="ex:b31s201" id="salle" class="mt-0 form-control">',
-            focusConfirm: false,
-            preConfirm: () => {
-              return [
-                document.getElementById('newdate').value,
-                document.getElementById('hour').value,
-                document.getElementById('salle').value
-              ]
+      generateEventsButton: {
+        text: "Générer",
+        click: function generate_creneau(){
+          Swal.fire({
+            title: 'Générer les créneaux',
+            html: "Tous les créneaux durant les plages disponibles de l'événement seront générés. Cette action peut générer un très grand nombre de créneaux.<br><br><b>Cette action réinitialisera tous les créneaux de l'événement.</b>",
+            showDenyButton: false,
+            showCancelButton: true,
+            confirmButtonText: `Générer`,
+            cancelButtonText: `Annuler`,
+          }).then((result) => {
+            /* Read more about isConfirmed, isDenied below */
+            if (result.isConfirmed) {
+              Swal.showLoading()
+              api_req("GET", '/api/v1/event/'+window.location.pathname.split('/')[2], {},(err, xhr) => {
+                event = xhr.responseJSON
+                dureeCreneau = event.dureeCreneau.split(':')
+                api_req("DELETE", '/api/v1/event/'+window.location.pathname.split('/')[2] + "/clear", {},(err, xhr) => {
+                  if(!err){
+
+                    Swal.fire({
+                      title: "Génération...",
+                      html: "Nous générons les créneaux de l'événement <i>"+event.nomEvent+"</i><br>Veuillez patienter...",
+                      footer: "<i id='generate-creneau-date'></i>"
+                    })
+                    Swal.showLoading()
+
+                    currentDate = new Date(Date.parse(event.dateDebut))
+                    endDate = new Date(Date.parse(event.dateFin))
+                    created = 0
+                    
+                    currentTime = new Date(currentDate.getTime())
+                    currentTime.setHours(event.heureDebut.split(':')[0], event.heureDebut.split(':')[1], 0, 0)
+
+                    endTime = new Date(currentDate.getTime())
+                    endTime.setHours(event.heureFin.split(':')[0], event.heureFin.split(':')[1])
+                    var loop
+
+                    loop = setInterval(function(){
+                      if(currentDate.getTime() <= endDate.getTime()){
+                        temp = new Date(currentTime.getTime())
+                        temp.addHours(parseInt(dureeCreneau[0])).addMinutes(parseInt(dureeCreneau[1]))
+                        if(currentTime.getTime() < endTime.getTime() && temp.getTime() < endTime.getTime() && currentTime.getDay() != 6 && currentTime.getDay() != 0){
+                          startPause = new Date(currentDate.getTime())
+                          startPause.setHours(event.heurePause.split(':')[0], event.heurePause.split(':')[1])
+
+                          endPause = new Date(currentDate.getTime())
+                          endPause.setHours(event.heureReprise.split(':')[0], event.heureReprise.split(':')[1])
+
+                          if(!((temp.getTime() > startPause.getTime() && temp.getTime() < endPause.getTime()) || (currentTime.getTime() > startPause.getTime() && currentTime.getTime() < endPause.getTime()))){
+                            // si pas dans la pause
+                            api_req("PUT", '/api/v1/event/'+window.location.pathname.split('/')[2]+'/creneau', {
+                              salle: "",
+                              start: currentTime.toISOString(),
+                              end: temp.toISOString(),
+                              group_id: ""
+                            }, function(err, xhr){
+                              created += 1
+                              $('#generate-creneau-date').html(currentTime.toISOString())
+                            })
+                            currentTime.addHours(parseInt(dureeCreneau[0])).addMinutes(parseInt(dureeCreneau[1]))
+                          } else {
+                            currentTime.setHours(endPause.getHours())
+                            currentTime.setMinutes(endPause.getMinutes())
+                          }
+                        } else {
+                          currentDate.addDays(1)
+                          currentTime = new Date(currentDate.getTime())
+                          currentTime.setHours(event.heureDebut.split(':')[0], event.heureDebut.split(':')[1], 0, 0)
+                          endTime = new Date(currentDate.getTime())
+                          endTime.setHours(event.heureFin.split(':')[0], event.heureFin.split(':')[1])
+                        }
+                      } else {
+                        clearInterval(loop)
+                        populate_events(calendar_admin)
+                        Swal.fire(
+                          'Génération terminée',
+                          'Les créneaux ont été générés avec succès!',
+                          'success'
+                        )
+                      }
+                    }, 250);
+                  } else {
+                    toastr.error("Nous ne pouvons pas lancer de génération de créneau pour le moment.")
+                  }
+                }) 
+              })
             }
           })
-          if(newcreneau){
-            var date= new Date('2021-' + newcreneau[0] + 'T' + newcreneau[1] + ':00')
-          }
-          if (!isNaN(date.valueOf())) { // valid?
-                    calendar_admin.addEvent({
-                      title: ('Salle ' + newcreneau[2]),
-                      start: date,
-                      id: (salle + date),
+        }
+      },
+      addEventButton: {
+        text: 'Nouveau créneau',
+        click: function create_creneau(){
+          api_req("GET", '/api/v1/event/'+window.location.pathname.split('/')[2], {},async function(err, xhr) {
+            if(err) return toastr.error("Nous ne pouvons pas créer de créneaux pour le moment.")
+            event = xhr.responseJSON
+            dureeCreneau = event.dureeCreneau.split(':')
 
-                      extendedProps: {
+            const {value: newcreneau} = await Swal.fire({
+              title: "Créer un créneau",
+              html:
+                '<label>Saisir le jour du créneau que vous voulez ajouter</label><input id="newdate" placeholder="MM-JJ" class="mt-0 form-control"><br>' +
+                '<label>Saisir l\'heure de début du créneau </label><input id="hour" placeholder="00:00" class="mt-0 form-control" type="time"><br>' +
+                '<label>Saisir la salle </label><input placeholder="ex:b31s201" id="salle" class="mt-0 form-control"><br>',
+              focusConfirm: false,
+              preConfirm: () => {
+                var newcreneau = [
+                  document.getElementById('newdate').value,
+                  document.getElementById('hour').value,
+                  document.getElementById('salle').value
+                ]
+                
+                if(newcreneau){
+                  var date = new Date('2021-' + newcreneau[0] + 'T' + newcreneau[1] + ':00')
+                  if (!isNaN(date.valueOf())) { // valid?
+                    api_req("PUT", '/api/v1/event/'+window.location.pathname.split('/')[2]+'/creneau', {
                       salle: newcreneau[2],
-                      jury:[],
-                      group:undefined,
-                      },
-                    });
+                      start: date.toISOString(),
+                      end: date.addHours(parseInt(dureeCreneau[0])).addMinutes(parseInt(dureeCreneau[1])).toISOString(),
+                      group_id: ""
+                    }, function(err, xhr){
+                      if(err){toastr.error(xhr.responseText)} else {
+                        toastr.success("Créneau ajouté à l'événement !")
+                        populate_events(calendar_admin)
+                      }
+                    })
                   } else {
-                    alert('Date non valide.');
+                    Swal.showValidationMessage("La date fournie est invalide.")
                   }
-        } 
+                }
+              }
+            })
+          })
+        }
         }},
-    events:'/api/v1/event/'+event_id+'/creneaux',
    });
+}
+
+
+function populate_events(calendar){
+  api_req("GET", '/api/v1/event/'+window.location.pathname.split('/')[2]+'/creneaux', {}, function(err, xhr){
+    if(!err){
+      calendar.removeAllEvents()
+      for(const [index, creneau] of Object.entries(xhr.responseJSON)){
+        calendar.addEvent({
+          id: creneau._id,
+          title: creneau.group ? "Groupe: " + creneau.group.groupname : "Libre",
+          salle: creneau.salle ? creneau.salle : "",
+          jury: creneau.jury,
+          group: creneau.group,
+          start: creneau.start,
+          end: creneau.end,
+          backgroundColor: creneau.group ? (creneau.group._id == user.group_id ? "green" : "red") : undefined
+        })
+      }
+    } else {
+      Swal.fire("Nous n'avons pas pu charger le planning", '', 'error')
+    }
+  })
 }
 
 /*function changeEventColor(calendarEl){

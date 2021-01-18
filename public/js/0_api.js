@@ -16,6 +16,30 @@ dataTableLanguageOptions = {
     },
 }
 
+Date.prototype.addHours = function(h) {
+  this.setTime(this.getTime() + (h*60*60*1000));
+  return this;
+}
+
+Date.prototype.addMinutes = function(m) {
+  this.setTime(this.getTime() + (m*60*1000));
+  return this;
+}
+
+Date.prototype.removeHours = function(h) {
+  this.setTime(this.getTime() - (h*60*60*1000));
+  return this;
+}
+
+Date.prototype.removeMinutes = function(m) {
+  this.setTime(this.getTime() - (m*60*1000));
+  return this;
+}
+
+Date.prototype.addDays = function(days) {
+    this.setDate(this.getDate() + days);
+    return this;
+}
 
 function findGetParameter(parameterName) {
     var result = null,
@@ -34,7 +58,7 @@ function api_req(method, url, fields, callback, btn = undefined){
     dataform = ""
     fields['_csrf'] = req_csrfToken
     for(const [field, value] of Object.entries(fields)){
-        dataform += field + "=" + encodeURI(value) + "&"
+        dataform += field + "=" + encodeURIComponent(value) + "&"
     }
 
     var btnVal = ""
@@ -56,6 +80,13 @@ function api_req(method, url, fields, callback, btn = undefined){
             }
         },
         error: function(xhr, status, err){
+          if(xhr.status == 429){
+            api_req(method, url, fields, function(err, xhr){
+              callback(err, xhr)
+            }, btn)
+            return
+          }
+
           callback(true, xhr)
         },
         success: function(data, status, xhr){

@@ -50,7 +50,7 @@ server.use(sessions({
   }
 }));
 
-server.use(csurf());
+server.use(csurf({cookie:true}));
 
 // error handling
 server.all("*", function(req, res, next){
@@ -98,61 +98,53 @@ server.listen(process.env.PORT, function(){
 })
 
 
+function view_checker(req, res, view_info){
+    if(!req.user && view_info.login){
+        res.status(401)
+        render_page({"filename": "login", "title": "Connexion"}, req, res)
+        return false
+    }
+
+    if(!req.user && view_info['admin']){
+        res.status(403)
+        render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+        return false
+    }
+
+    if(req.user && view_info['admin'] && !req.user.isAdmin){
+        res.status(403)
+        render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+        return false
+    }
+
+    return true
+}
 
 
-// LOADING ROUTING PATH
+// LOAD ROUTING PATH
 fs.readFile("./router.json", function(err, routerContent){
     routes = JSON.parse(routerContent)
-
     for (const [path, view_info] of Object.entries(routes['views'])) {
         console.log("[ROUTER] View '" + view_info['filename'] + "' linked to '" + path + "' and '/ajax" + path + "'")
 
-        server.get(path, function(req, res) {
-            if(!req.user && view_info.login){
-                res.status(401)
-                render_page({"filename": "login", "title": "Connexion"}, req, res)
-                return
-            }
-
-            if(!req.user && view_info['admin']){
-                res.status(403)
-                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
-                return
-            }
-
-            if(req.user && view_info['admin'] && !req.user.isAdmin){
-                res.status(403)
-                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
-                return
-            }
-
-            render_page(view_info, req, res)
+        server.get(path, function(req, res, next) {
+            if(view_checker(req, res, view_info)) return render_page(view_info, req, res)
+            if(!res.headersSent) next()
         });
         
-        server.get("/ajax" + path, function(req, res) {
-            render_page(view_info, req, res, false)
+        server.get("/ajax" + path, function(req, res, next) {
+            if(view_checker(req, res, view_info)) return render_page(view_info, req, res, false)
+            if(!res.headersSent) next()
         });
     }
 
-    for (const [path, api_info] of Object.entries(routes['api']['DELETE'])) {
-        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <DELETE> '" + process.env.API_PATH_PREF + path + "'")
-        server.delete(process.env.API_PATH_PREF + path, function(req, res, next) {
-            var temp = require("./api/" + api_info['filename'])
-            temp.exec(req, res, next)
-        });
-    }
+    for (const [method, paths] of Object.entries(routes['api'])) {
+      for (const [path, api_info] of Object.entries(paths)) {
+        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <"+method+"> '" + process.env.API_PATH_PREF + path + "'")
 
-    for (const [path, api_info] of Object.entries(routes['api']['PUT'])) {
-        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <PUT> '" + process.env.API_PATH_PREF + path + "'")
-        server.put(process.env.API_PATH_PREF + path, function(req, res, next) {
-            var temp = require("./api/" + api_info['filename'])
-            temp.exec(req, res, next)
-        });
-    }
+        server.all(process.env.API_PATH_PREF + path, function(req, res, next) {
+            if(req.method != method) return next()
 
-    for (const [path, api_info] of Object.entries(routes['api']['POST'])) {
-        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <POST> '" + process.env.API_PATH_PREF + path + "'")
-        server.post(process.env.API_PATH_PREF + path, function(req, res, next) {
             if(!req.user && api_info.login){
                 res.status(401)
                 res.end("Echec d'authentification : Vous devez être connecté pour accéder à cette page ou faire cette action.")
@@ -168,29 +160,10 @@ fs.readFile("./router.json", function(err, routerContent){
             var temp = require("./api/" + api_info['filename'])
             temp.exec(req, res, next)
         });
-    }
-
-    for (const [path, api_info] of Object.entries(routes['api']['GET'])) {
-        console.log("[ROUTER] API '" + api_info['filename'] + "' linked to <GET> '" + process.env.API_PATH_PREF + path + "'")
-        server.get(process.env.API_PATH_PREF + path, function(req, res, next) {
-            if(!req.user && api_info.login){
-                res.status(401)
-                res.end("Echec d'authentification : Vous devez être connecté pour accéder à cette page ou faire cette action.")
-                return
-            }
-
-            if(api_info.admin && (!req.user || !req.user.isAdmin)){
-                res.status(401)
-                res.end("L'accès à cet API est réservé aux administrateurs")
-                return
-            }
-
-            var temp = require("./api/" + api_info['filename'])
-            temp.exec(req, res, next)
-        });
+      }
     }
     
-    server.get(process.env.API_PATH_PREF + "/*", function(req, res, next) {
+    server.all(process.env.API_PATH_PREF + "/*", function(req, res, next) {
         res.status(404)
         res.end("Cannot link " + req.method + " "+req.url+" to any API script")
     })
@@ -201,6 +174,20 @@ fs.readFile("./router.json", function(err, routerContent){
     })
 })
 
+// Clear empty groups
+setInterval(function(){
+  db.selectAll('groupes', {}, {}, function(groups){
+    for(const [i, group] of Object.entries(groups)){
+      db.selectAll('users', {group_id: group._id.toString()}, {}, function(members){
+        if(members.length == 0){
+          db.deleteOne("groupes", {_id: group._id.toString()}, function(result){
+            console.log("[CLEANING] Group " + group._id.toString() + " deleted (empty)")
+          })
+        }
+      })
+    }
+  })
+}, 5000)
 
 // FUNCTIONS
 
@@ -246,6 +233,11 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}, att
                         }
 
                         framework = framework.replace(/{{ js_scripts }}/gi, js_scripts_embed)
+                        setTimeout(function(){
+                          if(!res.headersSent){
+                            res.redirect('back')
+                          }
+                        }, 5000)
                         if(!res.headersSent){
                           if(framework && params){
                             params['page_title'] = view['title']

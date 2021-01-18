@@ -8,6 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
   calendar_user.on('eventClick', function(info){
     Swal.fire({
       title: 'Que voulez-vous faire ?',
+      html:
+        "Groupe : " + (info.event.extendedProps.group ? info.event.extendedProps.group.groupname : "Aucun") + "<br>Salle : " + info.event.extendedProps.salle + "<br>" +
+        "<br><b>"+(info.event.extendedProps.jury.length > 0 ? "Membres du jury" : "Aucun jury")+"</b><br>" + (info.event.extendedProps.jury.map((examinateur) => {return examinateur.nomExaminateur + " " + examinateur.prenomExaminateur})).join('<br>'),
       showDenyButton: false,
       showCancelButton: true,
       confirmButtonText: 'Réserver',
@@ -16,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }).then((result) => {
         if (result.isConfirmed) {
           api_req("POST", '/api/v1/creneau/'+info.event.id+'/reserve', {}, function(err, xhr){
+            console.log(xhr)
             if(!err){
               toastr.success("Créneau réservé !")
               populate_events(calendar_user)
@@ -64,24 +68,6 @@ function buildCalendarUser(calendarEl){
     allDaySlot: false,// enlève l'affichage des évènements journaliers
     expandRows: true,// ajuste la taille des lignes 
   });
-}
-
-function populate_events(calendar){
-  api_req("GET", '/api/v1/event/'+window.location.pathname.split('/')[2]+'/creneaux', {}, function(err, xhr){
-    if(!err){
-      calendar.removeAllEvents()
-      for(const [index, creneau] of Object.entries(xhr.responseJSON)){
-        calendar.addEvent({
-          id: creneau._id,
-          title: creneau.group ? creneau.group.groupname : "Libre",
-          start: creneau.date,
-          backgroundColor: creneau.group ? "red" : undefined
-        })
-      }
-    } else {
-      Swal.fire("Nous n'avons pas pu charger le planning", '', 'error')
-    }
-  })
 }
 
 

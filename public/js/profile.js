@@ -5,12 +5,12 @@ if($('#create-group-form').length > 0){
         api_req('PUT', '/api/v1/group', {
           groupname : $('#group-name').val(),
           event_id : user_event_id,
-          description : $('#group-description'),
-          nomTuteurPolytech : $('#tpol-name'),
-          prenomTuteurPolytech : ('#tpol-firstname'),
-          nomTuteur : ('#t-name'),
-          prenomTuteur : ('#t-firstname'),
-          nomEntreprise : ('#company-name')
+          description : $('#group-description').val(),
+          nomTuteurPolytech : $('#tpol-name').val(),
+          prenomTuteurPolytech : $('#tpol-firstname').val(),
+          nomTuteur : $('#t-name').val(),
+          prenomTuteur : $('#t-firstname').val(),
+          nomEntreprise : $('#company-name').val()
         }, function(err, xhr){
           if(!err){
             Swal.fire({
@@ -20,9 +20,12 @@ if($('#create-group-form').length > 0){
               showConfirmButton: false,
             })
             Swal.showLoading()
-            setTimeout(() => {
+            
+            api_req('POST', '/api/v1/user/group/'+xhr.responseJSON._id+'/join', {
+              user_id: user._id
+            }, function(err, xhr){
               window.location.href = '/profile'
-            }, 2000)
+            })
           }else{
             toastr.error('<b>Echec lors de la création du groupe</b><br>' + xhr.responseText)
           }
@@ -59,7 +62,7 @@ if($('#choose-group-form').length > 0){
         }, function(err, xhr){
           if(!err){
             Swal.fire({
-              icon: 'success',
+              icon: 'toastr',
               title: 'Affectation au groupe en cours...',
               text: "Vous serez redirigé dans quelques instants",
               showConfirmButton: false,
@@ -85,12 +88,11 @@ if($('#promotion-form').length > 0){
         }, function(err, xhr){
           if(!err){
             Swal.fire({
-              icon: 'toastr',
+              icon: 'success',
               title: 'Profil mis à jour',
               showConfirmButton: false,
             })
             Swal.showLoading()
-
             setTimeout(() => {
               window.location.href = '/profile'
             }, 2000)
@@ -103,53 +105,22 @@ if($('#promotion-form').length > 0){
 
 
 /* Edit password */
-/*if($('#change-password-form').length > 0){
+if($('#change-password-form').length > 0){
     $('#change-password-form').on('submit', function(e) {
         e.preventDefault();
         if($('#newpassword1')){
           api_req('POST', '/api/v1/profile', {
-            oldpassword: $('#oldpassword').val()
-            newpassword1: $('#newpassword1').val()
-            newpassword2: $('#newpassword2').val()
+            oldpassword: $('#oldpassword').val(),
+            newpassword1: $('#newpassword1').val(),
+            newpassword2: $('#newpassword2').val(),
             email: user.email
           }, function(err, xhr){
             if(!err){
-              toastr.success('<b>Le mot de passe a bien été modifié</b><br>' + xhr.responseText)
+              toastr.success('Le mot de passe a bien été modifié')
             }else{
               toastr.error('<b>Echec lors de la modification du mot de passe</b><br>' + xhr.responseText)
             }
           }, document.getElementById('change-password-submit'))
         }
     });
-}*/
-
-/*async function create_creneau(){
-  const {value: newcreneau} = await Swal.fire({
-    title: "Créer votre créneau",
-    html:
-      '<label>Saisir le jour du créneau que vous voulez ajouter</label><input id="newdate" class="mt-0 form-control"><small><i>format MM-JJ</i></small>' +
-      '<label>Saisir l\'heure de début du créneau </label><input id="hour" class="mt-0 form-control"><small><i>format 00:00</i></small>' +
-      '<label>Saisir la salle </label><input id="salle" class="mt-0 form-control">',
-    focusConfirm: false,
-    preConfirm: () => {
-      return [
-        document.getElementById('newdate').value,
-        document.getElementById('hour').value,
-        document.getElementById('salle').value
-      ]
-    }
-  })
-  if(newcreneau){
-    var date= new Date('2021-' + newcreneau[0] + 'T' + newcreneau[1] + ':00')
-  }
-  if (!isNaN(date.valueOf())) { // valid?
-            calendar.addEvent({
-              title: ('Salle ' + newcreneau[2]),
-              start: date,
-              id: (salle + date),
-            });
-            alert('Great. Now, update your database...');
-          } else {
-            alert('Invalid date.');
-          }
-}*/
+}

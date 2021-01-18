@@ -9,6 +9,15 @@
 			"admin": false,
 			"autorefresh": true
 		},
+      "/jury": {
+			"filename": "jury",
+			"title": "Espace jury",
+			"css": [],
+			"js": [],
+			"login": false,
+			"admin": false,
+			"autorefresh": false
+		},
     "/login": {
 			"filename": "login",
 			"title": "Page de connexion",
@@ -112,6 +121,16 @@
 					"error": "String"
 				}
       },
+      "/event/:event_id/creneau": {
+				"filename": "create_creneau.js",
+				"login": false,
+        "admin": true,
+				"description": "Créé le créneau",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
       "/group": {
 				"filename": "create_group.js",
 				"login": true,
@@ -133,6 +152,36 @@
 					"success": "JSON",
 					"error": "String"
 				}
+      },
+      "/event/:event_id": {
+				"filename": "delete_event.js",
+				"login": false,
+        "admin": true,
+				"description": "Supprime l'événement",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/event/:event_id/clear": {
+				"filename": "clear_event.js",
+				"login": false,
+        "admin": true,
+				"description": "Supprime les créneaux de l'événement",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/creneau/:creneau_id": {
+				"filename": "delete_creneau.js",
+				"login": false,
+        "admin": true,
+				"description": "Supprime le créneau",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
       }
     },
 		"POST": {
@@ -145,8 +194,27 @@
 					"error": "String"
 				}
 			},
+      "/creneau/:creneau_id/jury": {
+				"filename": "edit_jury.js",
+				"login": true,
+        "admin": true,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
 			"/login": {
 				"filename": "login.js",
+				"login": false,
+				"description": "",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+			},
+      "/recovery": {
+				"filename": "recovery.js",
 				"login": false,
 				"description": "",
 				"return": {
@@ -288,6 +356,16 @@
 				"login": false,
 				"admin": false,
 				"description": "Retourne la liste des créneaux d'un événement ainsi que leurs informations",
+				"return": {
+					"success": "JSON",
+					"error": "String"
+				}
+      },
+      "/event/:event_id": {
+				"filename": "event_info.js",
+				"login": false,
+				"admin": false,
+				"description": "Retourne les infos d'un événement",
 				"return": {
 					"success": "JSON",
 					"error": "String"

@@ -68,18 +68,42 @@ function populate_event_list(){
   api_req("GET", "/api/v1/event", {}, function(err, xhr){
     if(!err){
       for(const [key, event] of Object.entries(xhr.responseJSON)){
-        data = [
+        events_DataTable.row.add([
           key,
           event.nomEvent,
           event.type_event_id,
           event.description,
           event.dateDebut,
           event.dateFin,
-                '<a class="btn btn-sm btn-danger" onclick=""><i class="fas fa-trash"></i></a>\n'+
-                '<a class="btn btn-sm btn-link" href="/event/'+event._id+'/edit"><i class="fas fa-edit"></i></a>'
-        ]
-        var newRow = events_DataTable.row.add(data).draw(false);
+          '<a class="btn btn-sm btn-danger" onclick="delete_event(\''+event._id.toString()+'\')"><i class="fas fa-trash"></i></a>\n'+
+          '<a class="btn btn-sm btn-link" href="/event/'+event._id+'/edit" target="_blank"><i class="fas fa-edit"></i></a>'
+        ]).draw(false);
       }
+    }
+  })
+}
+
+function delete_event(event_id){
+  Swal.fire({
+    icon: "warning",
+    title: "Suppression d'événement",
+    html: "La suppression d'un événement entraîne la suppression de ses créneaux et des groupes qui les ont réservés. <b>Cette action est irréversible.</b>",
+    showCancelButton: true,
+    confirmButtonText: `Confirmer`,
+    cancelButtonText: `Annuler`,
+  }).then((result) => {
+    /* Read more about isConfirmed, isDenied below */
+    if (result.isConfirmed) {
+      Swal.showLoading()
+      api_req("DELETE", "/api/v1/event/" + event_id, {}, function(err, xhr){
+        if(err){
+          toastr.error((xhr.responseText ? xhr.responseText : "Une erreur inconnue s'est produite"))
+        } else {
+          toastr.success("Evénement supprimé !")
+          events_DataTable.clear()
+          populate_event_list()
+        }
+      })
     }
   })
 }
@@ -104,9 +128,8 @@ if($('#events-form').length > 0){
         }, function(err, xhr){
           if(!err){
             Swal.fire({
-              icon: 'success',
-              title: 'Création de l\'évènement en cours...',
-              text: "Vous serez redirigé dans quelques instants",
+              icon: 'toastr.success',
+              title: 'Evènement créé',
               showConfirmButton: false,
             })
             //console.log($('#events-start-date').val())
