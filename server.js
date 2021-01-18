@@ -98,29 +98,6 @@ server.listen(process.env.PORT, function(){
 })
 
 
-function view_checker(req, res, view_info){
-    if(!req.user && view_info.login){
-        res.status(401)
-        render_page({"filename": "login", "title": "Connexion"}, req, res)
-        return false
-    }
-
-    if(!req.user && view_info['admin']){
-        res.status(403)
-        render_page({"filename": "403", "title": "Accès refusé"}, req, res)
-        return false
-    }
-
-    if(req.user && view_info['admin'] && !req.user.isAdmin){
-        res.status(403)
-        render_page({"filename": "403", "title": "Accès refusé"}, req, res)
-        return false
-    }
-
-    return true
-}
-
-
 // LOAD ROUTING PATH
 fs.readFile("./router.json", function(err, routerContent){
     routes = JSON.parse(routerContent)
@@ -128,13 +105,47 @@ fs.readFile("./router.json", function(err, routerContent){
         console.log("[ROUTER] View '" + view_info['filename'] + "' linked to '" + path + "' and '/ajax" + path + "'")
 
         server.get(path, function(req, res, next) {
-            if(view_checker(req, res, view_info)) return render_page(view_info, req, res)
-            if(!res.headersSent) next()
+            if(!req.user && view_info.login){
+                res.status(401)
+                render_page({"filename": "login", "title": "Connexion"}, req, res)
+                return false
+            }
+
+            if(!req.user && view_info['admin']){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return false
+            }
+
+            if(req.user && view_info['admin'] && !req.user.isAdmin){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return false
+            }
+
+            render_page(view_info, req, res)
         });
         
         server.get("/ajax" + path, function(req, res, next) {
-            if(view_checker(req, res, view_info)) return render_page(view_info, req, res, false)
-            if(!res.headersSent) next()
+            if(!req.user && view_info.login){
+                res.status(401)
+                render_page({"filename": "login", "title": "Connexion"}, req, res)
+                return false
+            }
+
+            if(!req.user && view_info['admin']){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return false
+            }
+
+            if(req.user && view_info['admin'] && !req.user.isAdmin){
+                res.status(403)
+                render_page({"filename": "403", "title": "Accès refusé"}, req, res)
+                return false
+            }
+            
+            render_page(view_info, req, res, false)
         });
     }
 
@@ -191,7 +202,7 @@ setInterval(function(){
 
 // FUNCTIONS
 
-function render_page(view, req, res, use_framework=true, replaceValues = {}, attempt = 0){
+function render_page(view, req, res, use_framework=true, replaceValues = {}, callback = () => {}){
     fs.readFile("./views/framework.ejs", function(err, framework){
         if(err){console.log(err)}
         if(use_framework){
@@ -257,18 +268,22 @@ function render_page(view, req, res, use_framework=true, replaceValues = {}, att
                                   params["user_event_id"] = user_event_id
                                   framework = ejs.render(framework, params)
                                   res.send(framework)
+                                  callback()
                                 })
                               } else {
                                 params["user_event_id"] = user_event_id
                                 framework = ejs.render(framework, params)
                                 res.send(framework)
+                                callback()
                               }
                             } catch(e) {
                               res.status(500)
                               res.send(e)
+                              callback()
                             }
                           } else {
                             res.send("FATAL ERROR")
+                            callback()
                           }
                         }
                     })
